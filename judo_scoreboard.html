@@ -1890,6 +1890,9 @@ function RenderCustomRules() {
     d.innerHTML = `<input type="checkbox" class="LocalRuleCheck" id="rule_${i}" ${checked} onchange="ToggleCustomRule(${i})" /><label for="rule_${i}" class="LocalRuleLabel">${r.label}${r.note ? ` <span style="color:#aaa;font-size:11px;">（${r.note}）</span>` : ''}</label><span class="LocalRuleVal">${r.val}${r.unit}</span><button class="LocalRuleDelBtn" onclick="DeleteCustomRule(${i})">×</button>`;
     c.appendChild(d);
   });
+  // スマホ横向き設定画面のローカルルール一覧にも即反映する
+  const sp = El('SpCustomRulesList');
+  if (sp) sp.innerHTML = c.innerHTML;
 }
 
 function DeleteCustomRule(i) {
