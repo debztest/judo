@@ -2758,11 +2758,11 @@ function StopTimer(side) {
   TimerState[side].run = false;
   if (sec > 0) {
     if (type === 'osae') {
-      Sc[side]['O']++; UpdateScores();
       const tl = Fmt(Remain);
+      // yukoSec到達時点で既にO加算済みのため、昇格後の解除では加算しない
       if (phase === 'waza')      AddLog(side, tl + ' 抑え込み解除（' + sec + '秒）技あり', 'O', false);
       else if (phase === 'yuko') AddLog(side, tl + ' 抑え込み解除（' + sec + '秒）有効',   'O', false);
-      else                       AddLog(side, tl + ' 抑え込み（' + sec + '秒）',            'O', true);
+      else                     { Sc[side]['O']++; UpdateScores(); AddLog(side, tl + ' 抑え込み（' + sec + '秒）', 'O', true); }
     } else {
       const gray = sec < Cfg.yukoThrowSec;
       AddLog(side, Fmt(Remain) + ' 有効（' + sec + '秒）', gray ? null : 'Y', gray);
