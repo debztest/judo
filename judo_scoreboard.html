@@ -814,7 +814,6 @@ body {
 .SpOpBtn--Sore   { background: #A32D2D; color: #FCEBEB; font-size: 11px; }
 
 /* 技カウント（スマホ） */
-.SpOsaeRow { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
 .SpOsaeBox {
   background: #fff;
   border: 1px solid #e0e0e0;
@@ -1563,6 +1562,14 @@ body {
               <div class="SpScoreBox"><div class="SpScoreNum"                   id="SpRedS">0</div></div>
               <div class="SpScoreBox"><div class="SpScoreNum SpScoreNum--Osae"  id="SpRedO">0</div></div>
             </div>
+            <div class="SpOsaeBox">
+              <div class="SpOsaeLbl">技カウント</div>
+              <div class="SpOsaeInner">
+                <span class="SpOsaeLabel" id="SpRedTimerLabel">--</span>
+                <span class="SpOsaeNum"   id="SpRedTimerVal">--</span>
+                <button class="SpKaijoBtn" onclick="StopTimer('red')">解除</button>
+              </div>
+            </div>
           </div>
           <!-- 操作ボタン -->
           <div class="SpOps">
@@ -1587,25 +1594,13 @@ body {
               <div class="SpScoreBox"><div class="SpScoreNum"                   id="SpWhiteS">0</div></div>
               <div class="SpScoreBox"><div class="SpScoreNum SpScoreNum--Osae"  id="SpWhiteO">0</div></div>
             </div>
-          </div>
-        </div>
-
-        <!-- 技カウント -->
-        <div class="SpOsaeRow">
-          <div class="SpOsaeBox">
-            <div class="SpOsaeLbl">赤 技カウント</div>
-            <div class="SpOsaeInner">
-              <span class="SpOsaeLabel" id="SpRedTimerLabel">--</span>
-              <span class="SpOsaeNum"   id="SpRedTimerVal">--</span>
-              <button class="SpKaijoBtn" onclick="StopTimer('red')">解除</button>
-            </div>
-          </div>
-          <div class="SpOsaeBox">
-            <div class="SpOsaeLbl">白 技カウント</div>
-            <div class="SpOsaeInner">
-              <span class="SpOsaeLabel" id="SpWhiteTimerLabel">--</span>
-              <span class="SpOsaeNum"   id="SpWhiteTimerVal">--</span>
-              <button class="SpKaijoBtn" onclick="StopTimer('white')">解除</button>
+            <div class="SpOsaeBox">
+              <div class="SpOsaeLbl">技カウント</div>
+              <div class="SpOsaeInner">
+                <span class="SpOsaeLabel" id="SpWhiteTimerLabel">--</span>
+                <span class="SpOsaeNum"   id="SpWhiteTimerVal">--</span>
+                <button class="SpKaijoBtn" onclick="StopTimer('white')">解除</button>
+              </div>
             </div>
           </div>
         </div>
