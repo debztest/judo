@@ -2814,14 +2814,23 @@ UpdateTimer();
 CheckLayout();
 SyncSpSetup();
 
-// PC画面のみ、起動時にアイコンをふわっと一瞬表示
-if (!IsMobile) {
+// PC画面のみ、起動時・再読み込み時にアイコンをふわっと一瞬表示
+function ShowSplashIfPc() {
+  if (IsMobile) return;
   const splash = El('SplashOverlay');
-  if (splash) {
-    splash.style.display = 'flex';
-    setTimeout(() => { splash.style.display = 'none'; }, 1300);
-  }
+  if (!splash) return;
+  // アニメーションを最初からやり直す（bfcache復帰時などにも再生させる）
+  splash.style.animation = 'none';
+  void splash.offsetWidth; // 強制リフロー
+  splash.style.animation = '';
+  splash.style.display = 'flex';
+  setTimeout(() => { splash.style.display = 'none'; }, 1300);
 }
+// pageshowは初回表示・通常の再読み込み・bfcache復帰のいずれでも発火する
+window.addEventListener('pageshow', () => {
+  CheckLayout();
+  ShowSplashIfPc();
+});
 
 </script>
 
