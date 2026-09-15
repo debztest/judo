@@ -1,0 +1,25 @@
+{
+  "name": "柔道スコアボード",
+  "short_name": "柔道審判",
+  "description": "柔道試合の審判用スコアボードアプリ",
+  "start_url": "./judo_scoreboard.html",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#501313",
+  "theme_color": "#501313",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
