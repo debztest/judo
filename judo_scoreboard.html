@@ -793,21 +793,25 @@ body {
 .SpScoreNum--Osae  { color: #BA7517; }
 
 /* 中央操作ボタン */
-.SpOps { display: flex; flex-direction: column; gap: 3px; align-items: center; }
+.SpOps { display: flex; flex-direction: column; gap: 4px; align-items: center; }
 .SpOpBtn {
-  width: 52px;
+  width: 72px;
+  height: 52px;
   padding: 6px 2px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-weight: 700;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 13px;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .SpOpBtn.IsDisabled     { opacity: 0.35; cursor: not-allowed; }
 .SpOpBtn--Hajime { background: #185FA5; color: #E6F1FB; }
 .SpOpBtn--Mate   { background: #BA7517; color: #FAEEDA; }
-.SpOpBtn--Sore   { background: #A32D2D; color: #FCEBEB; font-size: 9px; }
+.SpOpBtn--Sore   { background: #A32D2D; color: #FCEBEB; font-size: 11px; }
 
 /* 技カウント（スマホ） */
 .SpOsaeRow { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
