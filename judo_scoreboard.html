@@ -2816,16 +2816,18 @@ CheckLayout();
 SyncSpSetup();
 
 // PC画面のみ、起動時・再読み込み時にアイコンをふわっと一瞬表示
+let SplashHideTimer = null;
 function ShowSplashIfPc() {
   if (IsMobile) return;
   const splash = El('SplashOverlay');
   if (!splash) return;
+  if (SplashHideTimer) { clearTimeout(SplashHideTimer); SplashHideTimer = null; }
   // アニメーションを最初からやり直す（bfcache復帰時などにも再生させる）
   splash.style.animation = 'none';
   void splash.offsetWidth; // 強制リフロー
   splash.style.animation = '';
   splash.style.display = 'flex';
-  setTimeout(() => { splash.style.display = 'none'; }, 1800);
+  SplashHideTimer = setTimeout(() => { splash.style.display = 'none'; SplashHideTimer = null; }, 1800);
 }
 // pageshowは初回表示・通常の再読み込み・bfcache復帰のいずれでも発火する
 window.addEventListener('pageshow', () => {

@@ -1,5 +1,5 @@
 // Service Worker - 柔道スコアボード
-const CACHE_NAME = 'judo-scoreboard-v5';
+const CACHE_NAME = 'judo-scoreboard-v6';
 const ASSETS = [
   './judo_scoreboard.html',
   './manifest.json',
@@ -26,9 +26,11 @@ self.addEventListener('activate', event => {
 });
 
 // ネットワーク優先（常に最新を取得、失敗時はキャッシュ）
+// cache: 'no-store' でブラウザのHTTPキャッシュも無視し、必ずネットワークから取得する
+// （これがないと、再起動直後などmax-age内の再アクセスで古い内容が返り続けることがある）
 self.addEventListener('fetch', event => {
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, { cache: 'no-store' })
       .then(response => {
         // 取得成功したらキャッシュも更新
         const clone = response.clone();
