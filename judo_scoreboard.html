@@ -406,6 +406,7 @@ body {
 .ScoreGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
 .ScoreHdr { text-align: center; font-size: 10px; color: #888; font-weight: 600; padding-bottom: 2px; }
 .ScoreBox {
+  position: relative;
   background: #fff;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
@@ -415,6 +416,15 @@ body {
 .ScoreNum { font-size: 20px; font-weight: 600; color: #1a1a1a; line-height: 1; }
 .ScoreNum--Ippon { color: #A32D2D; }
 .ScoreNum--Osae  { color: #BA7517; }
+.ScoreUnit {
+  position: absolute;
+  right: 3px;
+  bottom: 1px;
+  font-size: 8px;
+  font-weight: 600;
+  color: #BA7517;
+  line-height: 1;
+}
 
 /* 判定ボタングリッド */
 .JudgeBtnGrid {
@@ -782,6 +792,7 @@ body {
 .SpScoreGrid--Nums .SpScoreBox { display: flex; align-items: center; justify-content: center; }
 .SpScoreHdr  { text-align: center; font-size: 8px; color: #888; font-weight: 600; }
 .SpScoreBox  {
+  position: relative;
   background: #fff;
   border: 1px solid #e0e0e0;
   border-radius: 4px;
@@ -791,6 +802,15 @@ body {
 .SpScoreNum { font-size: 22px; font-weight: 700; color: #1a1a1a; line-height: 1; }
 .SpScoreNum--Ippon { color: #A32D2D; }
 .SpScoreNum--Osae  { color: #BA7517; }
+.SpScoreUnit {
+  position: absolute;
+  right: 3px;
+  bottom: 1px;
+  font-size: 8px;
+  font-weight: 600;
+  color: #BA7517;
+  line-height: 1;
+}
 
 /* 中央操作ボタン */
 .SpOps { display: flex; flex-direction: column; gap: 4px; align-items: center; }
@@ -1428,7 +1448,7 @@ body {
           <div class="ScoreBox"><div class="ScoreNum"                 id="redW">0</div></div>
           <div class="ScoreBox"><div class="ScoreNum"                 id="redY">0</div></div>
           <div class="ScoreBox"><div class="ScoreNum"                 id="redS">0</div></div>
-          <div class="ScoreBox"><div class="ScoreNum ScoreNum--Osae"  id="redO">0</div></div>
+          <div class="ScoreBox"><div class="ScoreNum ScoreNum--Osae"  id="redO">0</div><span class="ScoreUnit">秒</span></div>
         </div>
         <div class="JudgeBtnGrid">
           <button class="JudgeBtn JudgeBtn--Ippon IsPaused" id="redBtnI" onclick="AddSc('red','I',1)">一本</button>
@@ -1465,7 +1485,7 @@ body {
           <div class="ScoreBox"><div class="ScoreNum"                 id="whiteW">0</div></div>
           <div class="ScoreBox"><div class="ScoreNum"                 id="whiteY">0</div></div>
           <div class="ScoreBox"><div class="ScoreNum"                 id="whiteS">0</div></div>
-          <div class="ScoreBox"><div class="ScoreNum ScoreNum--Osae"  id="whiteO">0</div></div>
+          <div class="ScoreBox"><div class="ScoreNum ScoreNum--Osae"  id="whiteO">0</div><span class="ScoreUnit">秒</span></div>
         </div>
         <div class="JudgeBtnGrid">
           <button class="JudgeBtn JudgeBtn--Ippon IsPaused" id="whiteBtnI" onclick="AddSc('white','I',1)">一本</button>
@@ -1559,7 +1579,7 @@ body {
               <div class="SpScoreBox"><div class="SpScoreNum"                   id="SpRedW">0</div></div>
               <div class="SpScoreBox"><div class="SpScoreNum"                   id="SpRedY">0</div></div>
               <div class="SpScoreBox"><div class="SpScoreNum"                   id="SpRedS">0</div></div>
-              <div class="SpScoreBox"><div class="SpScoreNum SpScoreNum--Osae"  id="SpRedO">0</div></div>
+              <div class="SpScoreBox"><div class="SpScoreNum SpScoreNum--Osae"  id="SpRedO">0</div><span class="SpScoreUnit">秒</span></div>
             </div>
             <div class="SpOsaeBox">
               <div class="SpOsaeLbl">技カウント</div>
@@ -1595,7 +1615,7 @@ body {
               <div class="SpScoreBox"><div class="SpScoreNum"                   id="SpWhiteW">0</div></div>
               <div class="SpScoreBox"><div class="SpScoreNum"                   id="SpWhiteY">0</div></div>
               <div class="SpScoreBox"><div class="SpScoreNum"                   id="SpWhiteS">0</div></div>
-              <div class="SpScoreBox"><div class="SpScoreNum SpScoreNum--Osae"  id="SpWhiteO">0</div></div>
+              <div class="SpScoreBox"><div class="SpScoreNum SpScoreNum--Osae"  id="SpWhiteO">0</div><span class="SpScoreUnit">秒</span></div>
             </div>
             <div class="SpOsaeBox">
               <div class="SpOsaeLbl">技カウント</div>
