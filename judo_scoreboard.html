@@ -694,6 +694,12 @@ body {
 .SpGearMenuItem:active { background: #e0e0e0 !important; }
 .SpGearMenuItem--Danger { color: #A32D2D; }
 .SpGearMenuItem--GS     { color: #185FA5; font-weight: 700; }
+.SpGearMenuItem.IsMenuDisabled {
+  background: #e5e5e5 !important;
+  color: #aaaaaa !important;
+  pointer-events: none;
+  cursor: not-allowed;
+}
 
 /* GS中テキスト */
 .SpGsLive {
@@ -1730,20 +1736,17 @@ function ApplyScale() {
 }
 
 /* ===== 歯車メニュー ===== */
-function ToggleGearMenu() {
-  El('SpGearMenu').classList.toggle('IsOpen');
-  // 試合中はルールブック・PDF・設定に戻るを押せない
+function UpdateGearMenuDisabled() {
+  // 試合中（タイマー進行中）はGS開始以外を押せず、背景をグレーにする
   ['GearMenuRule','GearMenuPDF','GearMenuBack'].forEach(id => {
     const b = El(id);
     if (!b) return;
-    if (Running) {
-      b.style.pointerEvents = 'none';
-      b.style.opacity = '0.35';
-    } else {
-      b.style.pointerEvents = '';
-      b.style.opacity = '';
-    }
+    b.classList.toggle('IsMenuDisabled', Running);
   });
+}
+function ToggleGearMenu() {
+  El('SpGearMenu').classList.toggle('IsOpen');
+  UpdateGearMenuDisabled();
 }
 function CloseGearMenu() {
   El('SpGearMenu')?.classList.remove('IsOpen');
@@ -2433,6 +2436,7 @@ function UpdateBtnPaused() {
     const b = El(id); if (b) b.classList.remove('IsPaused');
   });
   UpdateCtrlBtns();
+  UpdateGearMenuDisabled();
 }
 
 function UpdateHajimeBtn() {
