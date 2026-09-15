@@ -1047,9 +1047,39 @@ body {
   border-color: #185FA5;
 }
 
+/* ===== 起動スプラッシュ（PC画面のみ） ===== */
+.SplashOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f2f2f7;
+  pointer-events: none;
+  opacity: 0;
+  animation: SplashFade 1.3s ease-in-out forwards;
+}
+.SplashIcon {
+  width: 96px;
+  height: 96px;
+  border-radius: 22px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+}
+@keyframes SplashFade {
+  0%   { opacity: 0; transform: scale(0.92); }
+  20%  { opacity: 1; transform: scale(1); }
+  75%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+
 </style>
 </head>
 <body>
+
+<div class="SplashOverlay" id="SplashOverlay" style="display:none;">
+  <img class="SplashIcon" src="./icons/icon-512.png" alt="" />
+</div>
 
 <!-- ===== ルールモーダル ===== -->
 <div class="ModalOverlay" id="RuleModal">
@@ -2779,6 +2809,15 @@ Remain = Cfg.matchMin * 60;
 UpdateTimer();
 CheckLayout();
 SyncSpSetup();
+
+// PC画面のみ、起動時にアイコンをふわっと一瞬表示
+if (!IsMobile) {
+  const splash = El('SplashOverlay');
+  if (splash) {
+    splash.style.display = 'flex';
+    setTimeout(() => { splash.style.display = 'none'; }, 1300);
+  }
+}
 
 </script>
 
