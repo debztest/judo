@@ -1064,19 +1064,20 @@ body {
   background: #f2f2f7;
   pointer-events: none;
   opacity: 0;
-  animation: SplashFade 1.3s ease-in-out forwards;
+  animation: SplashFade 1.8s ease-in-out forwards;
 }
 .SplashIcon {
-  width: 96px;
-  height: 96px;
-  border-radius: 22px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+  width: 220px;
+  height: 220px;
+  border-radius: 44px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
 }
 @keyframes SplashFade {
-  0%   { opacity: 0; transform: scale(0.92); }
-  20%  { opacity: 1; transform: scale(1); }
+  0%   { opacity: 0; transform: scale(0.7); }
+  25%  { opacity: 1; transform: scale(1.04); }
+  35%  { opacity: 1; transform: scale(1); }
   75%  { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.06); }
 }
 
 </style>
@@ -2824,7 +2825,7 @@ function ShowSplashIfPc() {
   void splash.offsetWidth; // 強制リフロー
   splash.style.animation = '';
   splash.style.display = 'flex';
-  setTimeout(() => { splash.style.display = 'none'; }, 1300);
+  setTimeout(() => { splash.style.display = 'none'; }, 1800);
 }
 // pageshowは初回表示・通常の再読み込み・bfcache復帰のいずれでも発火する
 window.addEventListener('pageshow', () => {
