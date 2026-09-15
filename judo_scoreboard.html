@@ -1352,7 +1352,7 @@ body {
     <div class="SetupRow">
       <label>試合記録機能</label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-        <input type="checkbox" id="RecordEnabled" checked style="width:18px;height:18px;accent-color:#185FA5;cursor:pointer;" />
+        <input type="checkbox" id="RecordEnabled" style="width:18px;height:18px;accent-color:#185FA5;cursor:pointer;" />
         <span style="font-size:13px;color:#185FA5;font-weight:600;">ON</span>
       </label>
     </div>
@@ -1434,7 +1434,7 @@ body {
       <div class="SpSetupRow">
         <span class="SpSetupLabel">試合記録機能</span>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-          <input type="checkbox" id="SpRecordEnabled" checked
+          <input type="checkbox" id="SpRecordEnabled"
             style="width:18px;height:18px;accent-color:#185FA5;cursor:pointer;"
             onchange="El('RecordEnabled').checked=this.checked" />
           <span style="font-size:13px;color:#185FA5;font-weight:600;">ON</span>
@@ -2577,9 +2577,11 @@ function UpdateTimerDisplay(side, label, val, clr) {
 }
 
 /* ===== ログ ===== */
-function AddLog(side, text, key = null, gray = false, linkedSide = null, linkedKey = null) {
+function AddLog(side, text, key = null, gray = false, linkedSide = null, linkedKey = null, category = key) {
   const id = LogIdCounter++;
-  Logs[side].unshift({ id, text, key, gray, linkedSide, linkedKey, linkedId: null });
+  // category: 記録編集モーダルでの分類用（keyはスコアが実際に付いている場合のみ、
+  // 有効未満などノーカウントのgray記録はkey=nullだがcategoryは'Y'のまま一覧対象にする）
+  Logs[side].unshift({ id, text, key, gray, linkedSide, linkedKey, linkedId: null, category });
   RenderLog(side);
   return id;
 }
@@ -2668,7 +2670,7 @@ function RenderRecordEditList() {
   list.innerHTML = '';
   const entries = RecordEditKey === 'O'
     ? OsaeHistory[RecordEditSide]
-    : Logs[RecordEditSide].filter(e => e.key === RecordEditKey);
+    : Logs[RecordEditSide].filter(e => e.category === RecordEditKey);
   if (entries.length === 0) {
     const div = document.createElement('div');
     div.className = 'RecordEditEmpty';
@@ -2724,15 +2726,18 @@ function ApplyRecordEdit(id, newKey) {
   const side  = RecordEditSide;
   const entry = Logs[side].find(e => e.id === id);
   if (!entry) { CloseRecordEditModal(); return; }
-  const oldKey = entry.key;
-  if (oldKey === newKey) { RecordEditBackToList(); return; }
+  const oldKey      = entry.key;
+  const oldCategory = entry.category;
+  if (oldCategory === newKey && oldKey === newKey) { RecordEditBackToList(); return; }
 
   if (oldKey && Sc[side][oldKey] > 0) Sc[side][oldKey]--;
   Sc[side][newKey] = (Sc[side][newKey] || 0) + 1;
 
   const timePrefix = entry.text.split(' ')[0] || '';
-  entry.text = (timePrefix ? timePrefix + ' ' : '') + RecordEditKeyLabel[newKey] + '（判定変更）';
-  entry.key  = newKey;
+  entry.text = (timePrefix ? timePrefix + ' ' : '') + RecordEditKeyLabel[oldCategory] + '→' + RecordEditKeyLabel[newKey];
+  entry.key      = newKey;
+  entry.category = newKey;
+  entry.gray     = false;
 
   UpdateScores();
   RenderLog(side);
@@ -2755,7 +2760,8 @@ function CancelRecordEdit(id) {
     CloseRecordEditModal();
     return;
   }
-  DeleteLog(side, id, RecordEditKey);
+  const entry = Logs[side].find(e => e.id === id);
+  DeleteLog(side, id, entry ? entry.key : null);
   CloseRecordEditModal();
 }
 
@@ -2993,10 +2999,11 @@ function StopTimer(side) {
   // 抑込スコア欄は毎秒のカウントで既に経過秒数を反映済み（解除ログは残さない）
   if (sec > 0 && type !== 'osae') {
     const gray = sec < Cfg.yukoThrowSec;
-    AddLog(side, Fmt(Remain) + ' 有効（' + sec + '秒）', gray ? null : 'Y', gray);
-    El(side + 'BtnY')?.classList.remove('IsCountingYuko');
-    El('Sp' + SpSide(side) + 'BtnY')?.classList.remove('IsCountingYuko');
+    AddLog(side, Fmt(Remain) + ' 有効（' + sec + '秒）', gray ? null : 'Y', gray, null, null, 'Y');
   }
+  // 0秒（未経過）で解除された場合も点滅表示を確実に解除する
+  El(side + 'BtnY')?.classList.remove('IsCountingYuko');
+  El('Sp' + SpSide(side) + 'BtnY')?.classList.remove('IsCountingYuko');
   El(side + 'BtnO')?.classList.remove('IsCountingOsae');
   El('Sp' + SpSide(side) + 'BtnO')?.classList.remove('IsCountingOsae');
   if (type === 'osae') RecordOsaeHistory(side, sec);
