@@ -841,7 +841,6 @@ body {
 }
 
 /* 記録ボックス（スマホ） */
-.SpLogsRow { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
 .SpLogBox {
   background: #fff;
   border: 1px solid #e0e0e0;
@@ -1570,6 +1569,10 @@ body {
                 <button class="SpKaijoBtn" onclick="StopTimer('red')">解除</button>
               </div>
             </div>
+            <div class="SpLogBox">
+              <div class="SpLogLbl">赤の記録</div>
+              <div id="SpRedLog"></div>
+            </div>
           </div>
           <!-- 操作ボタン -->
           <div class="SpOps">
@@ -1602,18 +1605,10 @@ body {
                 <button class="SpKaijoBtn" onclick="StopTimer('white')">解除</button>
               </div>
             </div>
-          </div>
-        </div>
-
-        <!-- 記録 -->
-        <div class="SpLogsRow">
-          <div class="SpLogBox">
-            <div class="SpLogLbl">赤の記録</div>
-            <div id="SpRedLog"></div>
-          </div>
-          <div class="SpLogBox">
-            <div class="SpLogLbl">白の記録</div>
-            <div id="SpWhiteLog"></div>
+            <div class="SpLogBox">
+              <div class="SpLogLbl">白の記録</div>
+              <div id="SpWhiteLog"></div>
+            </div>
           </div>
         </div>
 
