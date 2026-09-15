@@ -406,6 +406,7 @@ body {
   color: #1a1a1a;
 }
 .TimerVal.IsRunning { color: #185FA5; }
+.TimerVal.IsGS { color: #A32D2D; }
 .GsTag {
   background: #A32D2D;
   color: #fff;
@@ -639,6 +640,7 @@ body {
   white-space: nowrap;
 }
 .SpTimer.IsRunning { color: #185FA5; }
+.SpTimer.IsGS { color: #A32D2D; }
 .SpGsTag {
   background: #A32D2D;
   color: #fff;
@@ -1712,6 +1714,7 @@ let Remain = 240;
 let Running = false;
 let TimerInterval = null;
 let IsGS = false;
+let GsElapsed = 0;
 let MatchFinished = false;
 let WinnerSide = null;
 
@@ -2195,14 +2198,15 @@ function GoMatch() {
 
 /* ===== タイマー ===== */
 function UpdateTimer() {
-  const t  = Fmt(Remain);
   const pc = El('PcTimerVal');
   const sp = El('SpTimerVal');
   if (IsGS) {
-    // GS中はタイマー表示を「GS中」のまま
-    if (pc) { pc.textContent = '延長中'; pc.className = Running ? 'TimerVal IsRunning' : 'TimerVal'; }
-    if (sp) { sp.textContent = '延長中'; sp.className = Running ? 'SpTimer IsRunning'  : 'SpTimer';  }
+    // GS中は0秒から経過時間を数え上げる
+    const t = Fmt(GsElapsed);
+    if (pc) { pc.textContent = t; pc.className = 'TimerVal IsGS' + (Running ? ' IsRunning' : ''); }
+    if (sp) { sp.textContent = t; sp.className = 'SpTimer IsGS'  + (Running ? ' IsRunning' : ''); }
   } else {
+    const t = Fmt(Remain);
     if (pc) { pc.textContent = t; pc.className = Running ? 'TimerVal IsRunning' : 'TimerVal'; }
     if (sp) { sp.textContent = t; sp.className = Running ? 'SpTimer IsRunning'  : 'SpTimer';  }
   }
@@ -2212,7 +2216,9 @@ function DoHajime() {
   if (Running || MatchFinished) return;
   Running = true;
   TimerInterval = setInterval(() => {
-    if (!IsGS) {
+    if (IsGS) {
+      GsElapsed++;
+    } else {
       if (Remain > 0) { Remain--; }
       else { clearInterval(TimerInterval); Running = false; OnTimeUp(); UpdateBtnPaused(); }
     }
@@ -2229,11 +2235,10 @@ function OnTimeUp() {
   if (redOsae || whiteOsae) {
     // タイマーはすでに止まっているが抑え込みカウントは継続→GSへ
     IsGS = true;
+    GsElapsed = 0;
     ['PcGsTag','SpGsTag'].forEach(id => { const e = El(id); if (e) e.style.display = 'inline-block'; });
     ['PcGsLive','SpGsLive'].forEach(id => { const e = El(id); if (e) e.style.display = 'inline-block'; });
-    const pc = El('PcTimerVal'); const sp = El('SpTimerVal');
-    if (pc) { pc.textContent = '延長中'; pc.className = 'TimerVal IsRunning'; }
-    if (sp) { sp.textContent = '延長中'; sp.className = 'SpTimer IsRunning';  }
+    UpdateTimer();
     // はじめは押さずに抑え込みカウントだけ継続（インターバルはStartCountTimerで動いている）
     return;
   }
@@ -2260,13 +2265,10 @@ function ToggleGS() {
     // GS開始（手動）
     DoMate(); // まず止める
     IsGS = true;
+    GsElapsed = 0;
     ['PcGsTag', 'SpGsTag'].forEach(id => { const e = El(id); if (e) e.style.display = 'inline-block'; });
     ['PcGsLive', 'SpGsLive'].forEach(id => { const e = El(id); if (e) e.style.display = 'inline-block'; });
-    // タイマー表示を「GS中」に
-    const pc = El('PcTimerVal');
-    const sp = El('SpTimerVal');
-    if (pc) { pc.textContent = '延長中'; pc.className = 'TimerVal IsRunning'; }
-    if (sp) { sp.textContent = '延長中'; sp.className = 'SpTimer IsRunning'; }
+    UpdateTimer();
     const btn = El('SpGsMenuBtn');
     if (btn) btn.textContent = '⚡ GS終了';
     AddLog('red',   '─ 延長戦 ─', null, true);
@@ -2277,13 +2279,10 @@ function ToggleGS() {
 
 function StartGS() {
   IsGS = true;
+  GsElapsed = 0;
   ['PcGsTag', 'SpGsTag'].forEach(id => { const e = El(id); if (e) e.style.display = 'inline-block'; });
   ['PcGsLive', 'SpGsLive'].forEach(id => { const e = El(id); if (e) e.style.display = 'inline-block'; });
-  // タイマー表示を「GS中」に
-  const pc = El('PcTimerVal');
-  const sp = El('SpTimerVal');
-  if (pc) { pc.textContent = '延長中'; pc.className = 'TimerVal IsRunning'; }
-  if (sp) { sp.textContent = '延長中'; sp.className = 'SpTimer IsRunning'; }
+  UpdateTimer();
   const btn = El('SpGsMenuBtn');
   if (btn) btn.textContent = '⚡ GS終了';
   AddLog('red',   '─ 延長戦 ─', null, true);
@@ -2426,6 +2425,7 @@ function DoResetMatch() {
   DoMate();
   MatchFinished = false;
   IsGS = false;
+  GsElapsed = 0;
   Remain = Cfg.matchMin * 60 + Cfg.matchSec;
   ClearAll();
   ['PcGsTag','SpGsTag','PcGsLive','SpGsLive'].forEach(id => { const e = El(id); if (e) e.style.display = 'none'; });
@@ -2463,6 +2463,7 @@ function ExecuteBack() {
   DoMate();
   MatchFinished = false;
   IsGS = false;
+  GsElapsed = 0;
   ClearAll();
   MatchRecords = [];
   El('WinBanner').className = 'WinBanner';
@@ -2887,6 +2888,9 @@ function StartCountTimer(side, type) {
     const n     = TimerState[side].sec;
     const phase = TimerState[side].osaePhase;
     UpdateTimerDisplay(side, lbl, n + '秒', clr);
+    // 規定時間終了と同時に抑え込み継続でGSへ入った場合、メインのタイマーインターバルが
+    // 止まっているのでここでGS経過時間を進める（通常時はメインループ側が進める）
+    if (IsGS && !Running) { GsElapsed++; UpdateTimer(); }
 
     if (type === 'osae') {
       // 抑込スコア欄は経過秒数をそのままリアルタイム表示する
