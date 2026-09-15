@@ -522,16 +522,6 @@ body {
 .OsaeNum.IsYuko  { color: #0F6E56; }
 .OsaeNum.IsWaza  { color: #185FA5; }
 .OsaeNum.IsIppon { color: #A32D2D; }
-.KaijoBtn {
-  padding: 4px 8px;
-  border: none;
-  border-radius: 6px;
-  background: #5F5E5A;
-  color: #F1EFE8;
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
-}
 
 /* ランプバー（PC） */
 .LampBar {
@@ -897,16 +887,6 @@ body {
 .SpOsaeNum.IsYuko  { color: #0F6E56; }
 .SpOsaeNum.IsWaza  { color: #185FA5; }
 .SpOsaeNum.IsIppon { color: #A32D2D; }
-.SpKaijoBtn {
-  padding: 2px 5px;
-  border: none;
-  border-radius: 4px;
-  background: #5F5E5A;
-  color: #F1EFE8;
-  font-size: 9px;
-  font-weight: 500;
-  cursor: pointer;
-}
 
 /* 記録ボックス（スマホ） */
 .SpLogBox {
@@ -1533,7 +1513,6 @@ body {
           <div class="OsaeInner">
             <span class="OsaeLabel" id="redTimerLabel">--</span>
             <span class="OsaeNum"   id="redTimerVal">--</span>
-            <button class="KaijoBtn" onclick="StopTimer('red')">解除</button>
           </div>
         </div>
         <div class="LampBar" id="redLamp">赤ランプ</div>
@@ -1570,7 +1549,6 @@ body {
           <div class="OsaeInner">
             <span class="OsaeLabel" id="whiteTimerLabel">--</span>
             <span class="OsaeNum"   id="whiteTimerVal">--</span>
-            <button class="KaijoBtn" onclick="StopTimer('white')">解除</button>
           </div>
         </div>
         <div class="LampBar" id="whiteLamp">白ランプ</div>
@@ -1657,7 +1635,6 @@ body {
               <div class="SpOsaeInner">
                 <span class="SpOsaeLabel" id="SpRedTimerLabel">--</span>
                 <span class="SpOsaeNum"   id="SpRedTimerVal">--</span>
-                <button class="SpKaijoBtn" onclick="StopTimer('red')">解除</button>
               </div>
             </div>
             <div class="SpLogBox">
@@ -1693,7 +1670,6 @@ body {
               <div class="SpOsaeInner">
                 <span class="SpOsaeLabel" id="SpWhiteTimerLabel">--</span>
                 <span class="SpOsaeNum"   id="SpWhiteTimerVal">--</span>
-                <button class="SpKaijoBtn" onclick="StopTimer('white')">解除</button>
               </div>
             </div>
             <div class="SpLogBox">
@@ -2849,15 +2825,7 @@ function HandleYuko(side) {
   if (MatchFinished) return;
   const state = TimerState[side];
   if (state.run && state.type === 'yuko') {
-    clearInterval(state.int);
-    state.run = false;
-    Sc[side]['Y']++;
-    UpdateScores();
-    AddLog(side, (IsGS ? '延長戦' : Fmt(Remain)) + ' 有効！（即判定）', 'Y');
-    UpdateTimerDisplay(side, '--', '--', '');
-    El(side + 'BtnY')?.classList.remove('IsCountingYuko');
-    El('Sp' + SpSide(side) + 'BtnY')?.classList.remove('IsCountingYuko');
-    TimerState[side] = { run: false, sec: 0, int: null, type: '', osaePhase: '' };
+    StopTimer(side);
   } else {
     StartCountTimer(side, 'yuko');
   }
