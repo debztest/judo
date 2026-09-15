@@ -2675,6 +2675,9 @@ function StartCountTimer(side, type) {
   } else {
     El(side + 'BtnO')?.classList.add('IsCountingOsae');
     El(spOKey)?.classList.add('IsCountingOsae');
+    // 抑込スコア欄は新しい抑え込みが始まるたびに0からやり直す
+    Sc[side]['O'] = 0;
+    UpdateScores();
   }
   // 抑え込み自身のカウント中はボタンを有効のままにし、再押下で解除できるようにする
   SetOsaeDisabled(side, type !== 'osae');
@@ -2691,11 +2694,13 @@ function StartCountTimer(side, type) {
     UpdateTimerDisplay(side, lbl, n + '秒', clr);
 
     if (type === 'osae') {
+      // 抑込スコア欄は経過秒数をそのままリアルタイム表示する
+      Sc[side]['O'] = n;
+      UpdateScores();
       /* 有効昇格 */
       if (n === Cfg.yukoSec && phase === '') {
         TimerState[side].osaePhase = 'yuko';
         Sc[side]['Y']++;
-        Sc[side]['O']++;
         UpdateScores();
         AddLog(side, (IsGS ? '延長戦' : Fmt(Remain)) + ' 有効（抑え込み' + n + '秒）', 'Y');
         UpdateTimerDisplay(side, '抑え込み', n + '秒', 'IsActiveYuko');
@@ -2763,7 +2768,6 @@ function StartCountTimer(side, type) {
 function StopTimer(side) {
   const sec   = TimerState[side].sec;
   const type  = TimerState[side].type;
-  const phase = TimerState[side].osaePhase;
   const wasGS = IsGS;
 
   // GS中の抑え込み解除 → それまで1回目と同じ動作（ブザー・延長終了・判定）
@@ -2793,16 +2797,12 @@ function StopTimer(side) {
   // 通常の解除
   clearInterval(TimerState[side].int);
   TimerState[side].run = false;
-  if (sec > 0) {
-    if (type === 'osae') {
-      // 解除ログは残さない。昇格せずに解除した場合のみOを加算（昇格済みなら加算済み）
-      if (phase === '') { Sc[side]['O']++; UpdateScores(); }
-    } else {
-      const gray = sec < Cfg.yukoThrowSec;
-      AddLog(side, Fmt(Remain) + ' 有効（' + sec + '秒）', gray ? null : 'Y', gray);
-      El(side + 'BtnY')?.classList.remove('IsCountingYuko');
-      El('Sp' + SpSide(side) + 'BtnY')?.classList.remove('IsCountingYuko');
-    }
+  // 抑込スコア欄は毎秒のカウントで既に経過秒数を反映済み（解除ログは残さない）
+  if (sec > 0 && type !== 'osae') {
+    const gray = sec < Cfg.yukoThrowSec;
+    AddLog(side, Fmt(Remain) + ' 有効（' + sec + '秒）', gray ? null : 'Y', gray);
+    El(side + 'BtnY')?.classList.remove('IsCountingYuko');
+    El('Sp' + SpSide(side) + 'BtnY')?.classList.remove('IsCountingYuko');
   }
   El(side + 'BtnO')?.classList.remove('IsCountingOsae');
   El('Sp' + SpSide(side) + 'BtnO')?.classList.remove('IsCountingOsae');
