@@ -189,6 +189,37 @@ body {
   cursor: pointer;
 }
 
+/* ===== 記録編集モーダル ===== */
+.RecordEditRow {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+}
+.RecordEditRow:hover  { border-color: #185FA5; background: #f0f6ff; }
+.RecordEditRow:active { background: #e6f0fc; }
+.RecordEditEmpty { font-size: 13px; color: #999; text-align: center; padding: 20px 0; }
+.RecordEditChangeBtn {
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #fff;
+}
+.RecordEditChangeBtn--I { background: #A32D2D; }
+.RecordEditChangeBtn--W { background: #185FA5; }
+.RecordEditChangeBtn--Y { background: #0F6E56; }
+.RecordEditChangeBtn--S { background: #633806; }
+
 /* ===== 設定画面 ===== */
 .SetupScreen { padding: 16px; }
 .SetupCard {
@@ -412,7 +443,10 @@ body {
   border-radius: 6px;
   text-align: center;
   padding: 4px 2px;
+  cursor: pointer;
 }
+.ScoreBox:hover  { border-color: #185FA5; }
+.ScoreBox:active { background: #f0f6ff; }
 .ScoreNum { font-size: 20px; font-weight: 600; color: #1a1a1a; line-height: 1; }
 .ScoreNum--Ippon { color: #A32D2D; }
 .ScoreNum--Osae  { color: #BA7517; }
@@ -798,7 +832,9 @@ body {
   border-radius: 4px;
   text-align: center;
   padding: 10px 1px;
+  cursor: pointer;
 }
+.SpScoreBox:active { background: #f0f6ff; }
 .SpScoreNum { font-size: 22px; font-weight: 700; color: #1a1a1a; line-height: 1; }
 .SpScoreNum--Ippon { color: #A32D2D; }
 .SpScoreNum--Osae  { color: #BA7517; }
@@ -1244,6 +1280,29 @@ body {
   </div>
 </div>
 
+<!-- ===== 記録編集モーダル（スコア欄タップで開く） ===== -->
+<div class="ModalOverlay" id="RecordEditModal">
+  <div class="ModalBox" style="max-width:380px;">
+    <div class="ModalTitle">
+      <span id="RecordEditTitle">記録一覧</span>
+      <button class="ModalCloseBtn" onclick="CloseRecordEditModal()">✕</button>
+    </div>
+
+    <!-- 一覧表示 -->
+    <div id="RecordEditListView">
+      <div id="RecordEditList"></div>
+    </div>
+
+    <!-- 判定変更表示 -->
+    <div id="RecordEditChangeView" style="display:none;">
+      <div style="font-size:13px;color:#555;background:#f7f7f7;border-radius:8px;padding:8px 10px;margin-bottom:12px;" id="RecordEditChangeText"></div>
+      <div style="font-size:12px;color:#888;margin-bottom:8px;">変更後の判定を選択してください</div>
+      <div style="display:flex;flex-direction:column;gap:6px;" id="RecordEditChangeBtns"></div>
+      <button class="AddRuleCancelBtn" style="width:100%;margin-top:10px;" onclick="RecordEditBackToList()">← 一覧に戻る</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== 設定画面 ===== -->
 <div class="SetupScreen" id="SetupScreen">
   <div class="SetupCard">
@@ -1444,11 +1503,11 @@ body {
           <div class="ScoreHdr">有効</div>
           <div class="ScoreHdr">指導</div>
           <div class="ScoreHdr">抑え込み</div>
-          <div class="ScoreBox"><div class="ScoreNum ScoreNum--Ippon" id="redI">0</div></div>
-          <div class="ScoreBox"><div class="ScoreNum"                 id="redW">0</div></div>
-          <div class="ScoreBox"><div class="ScoreNum"                 id="redY">0</div></div>
-          <div class="ScoreBox"><div class="ScoreNum"                 id="redS">0</div></div>
-          <div class="ScoreBox"><div class="ScoreNum ScoreNum--Osae"  id="redO">0</div><span class="ScoreUnit">秒</span></div>
+          <div class="ScoreBox" onclick="OpenRecordEditList('red','I')"><div class="ScoreNum ScoreNum--Ippon" id="redI">0</div></div>
+          <div class="ScoreBox" onclick="OpenRecordEditList('red','W')"><div class="ScoreNum"                 id="redW">0</div></div>
+          <div class="ScoreBox" onclick="OpenRecordEditList('red','Y')"><div class="ScoreNum"                 id="redY">0</div></div>
+          <div class="ScoreBox" onclick="OpenRecordEditList('red','S')"><div class="ScoreNum"                 id="redS">0</div></div>
+          <div class="ScoreBox" onclick="OpenRecordEditList('red','O')"><div class="ScoreNum ScoreNum--Osae"  id="redO">0</div><span class="ScoreUnit">秒</span></div>
         </div>
         <div class="JudgeBtnGrid">
           <button class="JudgeBtn JudgeBtn--Ippon IsPaused" id="redBtnI" onclick="AddSc('red','I',1)">一本</button>
@@ -1481,11 +1540,11 @@ body {
           <div class="ScoreHdr">有効</div>
           <div class="ScoreHdr">指導</div>
           <div class="ScoreHdr">抑え込み</div>
-          <div class="ScoreBox"><div class="ScoreNum ScoreNum--Ippon" id="whiteI">0</div></div>
-          <div class="ScoreBox"><div class="ScoreNum"                 id="whiteW">0</div></div>
-          <div class="ScoreBox"><div class="ScoreNum"                 id="whiteY">0</div></div>
-          <div class="ScoreBox"><div class="ScoreNum"                 id="whiteS">0</div></div>
-          <div class="ScoreBox"><div class="ScoreNum ScoreNum--Osae"  id="whiteO">0</div><span class="ScoreUnit">秒</span></div>
+          <div class="ScoreBox" onclick="OpenRecordEditList('white','I')"><div class="ScoreNum ScoreNum--Ippon" id="whiteI">0</div></div>
+          <div class="ScoreBox" onclick="OpenRecordEditList('white','W')"><div class="ScoreNum"                 id="whiteW">0</div></div>
+          <div class="ScoreBox" onclick="OpenRecordEditList('white','Y')"><div class="ScoreNum"                 id="whiteY">0</div></div>
+          <div class="ScoreBox" onclick="OpenRecordEditList('white','S')"><div class="ScoreNum"                 id="whiteS">0</div></div>
+          <div class="ScoreBox" onclick="OpenRecordEditList('white','O')"><div class="ScoreNum ScoreNum--Osae"  id="whiteO">0</div><span class="ScoreUnit">秒</span></div>
         </div>
         <div class="JudgeBtnGrid">
           <button class="JudgeBtn JudgeBtn--Ippon IsPaused" id="whiteBtnI" onclick="AddSc('white','I',1)">一本</button>
@@ -1575,11 +1634,11 @@ body {
               <div class="SpScoreHdr">抑込</div>
             </div>
             <div class="SpScoreGrid SpScoreGrid--Nums">
-              <div class="SpScoreBox"><div class="SpScoreNum SpScoreNum--Ippon" id="SpRedI">0</div></div>
-              <div class="SpScoreBox"><div class="SpScoreNum"                   id="SpRedW">0</div></div>
-              <div class="SpScoreBox"><div class="SpScoreNum"                   id="SpRedY">0</div></div>
-              <div class="SpScoreBox"><div class="SpScoreNum"                   id="SpRedS">0</div></div>
-              <div class="SpScoreBox"><div class="SpScoreNum SpScoreNum--Osae"  id="SpRedO">0</div><span class="SpScoreUnit">秒</span></div>
+              <div class="SpScoreBox" onclick="OpenRecordEditList('red','I')"><div class="SpScoreNum SpScoreNum--Ippon" id="SpRedI">0</div></div>
+              <div class="SpScoreBox" onclick="OpenRecordEditList('red','W')"><div class="SpScoreNum"                   id="SpRedW">0</div></div>
+              <div class="SpScoreBox" onclick="OpenRecordEditList('red','Y')"><div class="SpScoreNum"                   id="SpRedY">0</div></div>
+              <div class="SpScoreBox" onclick="OpenRecordEditList('red','S')"><div class="SpScoreNum"                   id="SpRedS">0</div></div>
+              <div class="SpScoreBox" onclick="OpenRecordEditList('red','O')"><div class="SpScoreNum SpScoreNum--Osae"  id="SpRedO">0</div><span class="SpScoreUnit">秒</span></div>
             </div>
             <div class="SpOsaeBox">
               <div class="SpOsaeLbl">技カウント</div>
@@ -1611,11 +1670,11 @@ body {
               <div class="SpScoreHdr">抑込</div>
             </div>
             <div class="SpScoreGrid SpScoreGrid--Nums">
-              <div class="SpScoreBox"><div class="SpScoreNum SpScoreNum--Ippon" id="SpWhiteI">0</div></div>
-              <div class="SpScoreBox"><div class="SpScoreNum"                   id="SpWhiteW">0</div></div>
-              <div class="SpScoreBox"><div class="SpScoreNum"                   id="SpWhiteY">0</div></div>
-              <div class="SpScoreBox"><div class="SpScoreNum"                   id="SpWhiteS">0</div></div>
-              <div class="SpScoreBox"><div class="SpScoreNum SpScoreNum--Osae"  id="SpWhiteO">0</div><span class="SpScoreUnit">秒</span></div>
+              <div class="SpScoreBox" onclick="OpenRecordEditList('white','I')"><div class="SpScoreNum SpScoreNum--Ippon" id="SpWhiteI">0</div></div>
+              <div class="SpScoreBox" onclick="OpenRecordEditList('white','W')"><div class="SpScoreNum"                   id="SpWhiteW">0</div></div>
+              <div class="SpScoreBox" onclick="OpenRecordEditList('white','Y')"><div class="SpScoreNum"                   id="SpWhiteY">0</div></div>
+              <div class="SpScoreBox" onclick="OpenRecordEditList('white','S')"><div class="SpScoreNum"                   id="SpWhiteS">0</div></div>
+              <div class="SpScoreBox" onclick="OpenRecordEditList('white','O')"><div class="SpScoreNum SpScoreNum--Osae"  id="SpWhiteO">0</div><span class="SpScoreUnit">秒</span></div>
             </div>
             <div class="SpOsaeBox">
               <div class="SpOsaeLbl">技カウント</div>
@@ -2593,6 +2652,98 @@ function DeleteLog(side, id, key) {
   CheckWinCondition();
   UpdateHajimeBtn();
   if (!MatchFinished && WinnerSide) { UpdateLamps(WinnerSide, false); WinnerSide = null; }
+}
+
+/* ===== 記録編集（スコア欄タップで一覧→判定変更） ===== */
+let RecordEditSide = null;
+let RecordEditKey  = null;
+const RecordEditKeyLabel = { I: '一本', W: '技あり', Y: '有効', S: '指導', O: '抑え込み' };
+
+function OpenRecordEditList(side, key) {
+  RecordEditSide = side;
+  RecordEditKey  = key;
+  const sideLabel = side === 'red' ? '赤' : '白';
+  El('RecordEditTitle').textContent = sideLabel + ' ' + RecordEditKeyLabel[key] + ' の記録';
+  RenderRecordEditList();
+  El('RecordEditListView').style.display   = 'block';
+  El('RecordEditChangeView').style.display = 'none';
+  El('RecordEditModal').classList.add('IsOpen');
+}
+
+function RenderRecordEditList() {
+  const list = El('RecordEditList');
+  list.innerHTML = '';
+  const entries = Logs[RecordEditSide].filter(e => e.key === RecordEditKey);
+  if (entries.length === 0) {
+    const div = document.createElement('div');
+    div.className = 'RecordEditEmpty';
+    div.textContent = '記録がありません';
+    list.appendChild(div);
+    return;
+  }
+  entries.forEach(entry => {
+    const btn = document.createElement('button');
+    btn.className = 'RecordEditRow';
+    btn.textContent = entry.text;
+    btn.onclick = () => OpenRecordEditChange(entry.id);
+    list.appendChild(btn);
+  });
+}
+
+function OpenRecordEditChange(id) {
+  const entry = Logs[RecordEditSide].find(e => e.id === id);
+  if (!entry) return;
+  El('RecordEditChangeText').textContent = entry.text;
+  const wrap = El('RecordEditChangeBtns');
+  wrap.innerHTML = '';
+  ['I', 'W', 'Y', 'S'].forEach(k => {
+    const btn = document.createElement('button');
+    btn.className = 'RecordEditChangeBtn RecordEditChangeBtn--' + k;
+    btn.textContent = RecordEditKeyLabel[k] + (k === entry.key ? '（現在）' : 'に変更');
+    btn.onclick = () => ApplyRecordEdit(id, k);
+    wrap.appendChild(btn);
+  });
+  El('RecordEditListView').style.display   = 'none';
+  El('RecordEditChangeView').style.display = 'block';
+}
+
+function RecordEditBackToList() {
+  RenderRecordEditList();
+  El('RecordEditListView').style.display   = 'block';
+  El('RecordEditChangeView').style.display = 'none';
+}
+
+function ApplyRecordEdit(id, newKey) {
+  const side  = RecordEditSide;
+  const entry = Logs[side].find(e => e.id === id);
+  if (!entry) { CloseRecordEditModal(); return; }
+  const oldKey = entry.key;
+  if (oldKey === newKey) { RecordEditBackToList(); return; }
+
+  if (oldKey && Sc[side][oldKey] > 0) Sc[side][oldKey]--;
+  Sc[side][newKey] = (Sc[side][newKey] || 0) + 1;
+
+  const timePrefix = entry.text.split(' ')[0] || '';
+  entry.text = (timePrefix ? timePrefix + ' ' : '') + RecordEditKeyLabel[newKey] + '（判定変更）';
+  entry.key  = newKey;
+
+  UpdateScores();
+  RenderLog(side);
+  CloseRecordEditModal();
+
+  if (newKey === 'I') {
+    DeclareWin(side, '一本（判定変更）');
+  } else {
+    CheckWinCondition();
+    UpdateHajimeBtn();
+    if (!MatchFinished && WinnerSide) { UpdateLamps(WinnerSide, false); WinnerSide = null; }
+  }
+}
+
+function CloseRecordEditModal() {
+  El('RecordEditModal').classList.remove('IsOpen');
+  RecordEditSide = null;
+  RecordEditKey  = null;
 }
 
 /* ===== 勝敗 ===== */
