@@ -2422,12 +2422,14 @@ function UpdateScores() {
 
 /* ===== ボタン制御 ===== */
 function UpdateBtnPaused() {
+  // 判定ボタン（一本・技あり・有効・指導・抑え込み）は、まて中でも押せるようにする
+  // （試合終了後のみ操作不可）
   ['red','white'].forEach(side => {
     ['I','W','Y','S','O'].forEach(k => {
       const pc = El(side + 'Btn' + k);
       const sp = El('Sp' + SpSide(side) + 'Btn' + k);
-      if (pc) { if (Running) pc.classList.remove('IsPaused'); else pc.classList.add('IsPaused'); }
-      if (sp) { if (Running) sp.classList.remove('IsPaused'); else sp.classList.add('IsPaused'); }
+      if (pc) { if (!MatchFinished) pc.classList.remove('IsPaused'); else pc.classList.add('IsPaused'); }
+      if (sp) { if (!MatchFinished) sp.classList.remove('IsPaused'); else sp.classList.add('IsPaused'); }
     });
   });
   // それまでボタンは IsPaused を当てない（IsDisabled で制御）
@@ -2466,10 +2468,11 @@ function UpdateCtrlBtns() {
 }
 
 function SetOsaeDisabled(side, disabled) {
+  // まて中でも抑え込みボタンは押せるようにするため、Runningではなく試合終了有無で判定
   const pc = El(side + 'BtnO');
   const sp = El('Sp' + SpSide(side) + 'BtnO');
-  if (pc) { pc.disabled = disabled; if (disabled) pc.classList.add('IsPaused'); else if (Running) pc.classList.remove('IsPaused'); }
-  if (sp) { sp.disabled = disabled; if (disabled) sp.classList.add('IsPaused'); else if (Running) sp.classList.remove('IsPaused'); }
+  if (pc) { pc.disabled = disabled; if (disabled) pc.classList.add('IsPaused'); else if (!MatchFinished) pc.classList.remove('IsPaused'); }
+  if (sp) { sp.disabled = disabled; if (disabled) sp.classList.add('IsPaused'); else if (!MatchFinished) sp.classList.remove('IsPaused'); }
 }
 
 /* ===== ランプ ===== */
@@ -2601,7 +2604,8 @@ function CloseWin() {
 
 /* ===== スコア加算 ===== */
 function AddSc(side, key, val) {
-  if (MatchFinished || !Running) return;
+  // まて中（Running=false）でも判定操作はできる。試合終了後のみ不可
+  if (MatchFinished) return;
   Sc[side][key] = Math.max(0, Sc[side][key] + val);
   UpdateScores();
   if (val > 0) {
@@ -2628,7 +2632,7 @@ function AddSc(side, key, val) {
 
 /* ===== 有効ボタン（2回押しで即判定） ===== */
 function HandleYuko(side) {
-  if (MatchFinished || !Running) return;
+  if (MatchFinished) return;
   const state = TimerState[side];
   if (state.run && state.type === 'yuko') {
     clearInterval(state.int);
@@ -2646,7 +2650,7 @@ function HandleYuko(side) {
 }
 
 function HandleOsae(side) {
-  if (MatchFinished || !Running) return;
+  if (MatchFinished) return;
   const state = TimerState[side];
   if (state.run && state.type === 'osae') {
     StopTimer(side);
@@ -2657,7 +2661,7 @@ function HandleOsae(side) {
 
 /* ===== 抑え込み・有効カウント ===== */
 function StartCountTimer(side, type) {
-  if (MatchFinished || !Running) return;
+  if (MatchFinished) return;
   if (TimerState[side].run) StopTimer(side);
   const other = side === 'red' ? 'white' : 'red';
   if (TimerState[other].run) StopTimer(other);
