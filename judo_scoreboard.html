@@ -1154,7 +1154,7 @@ body {
       <div class="RuleItem"><span class="RuleTag RuleTag--Ippon">一本</span>即時勝利</div>
       <div class="RuleItem"><span class="RuleTag RuleTag--Waza">技あり</span>2回で合わせ技一本</div>
       <div class="RuleItem"><span class="RuleTag RuleTag--Shido">指導</span>3回で反則負け</div>
-      <div class="RuleItem">⏱ 時間終了時：技あり数 → 指導数で判定 → 同点はGS延長</div>
+      <div class="RuleItem">⏱ 時間終了時：技あり数 → 有効数 → 指導数で判定 → 同点はGS延長</div>
     </div>
     <div class="RuleSection">
       <div class="RuleSectionTitle">🥋 投げ技・固め技の判定</div>
@@ -2239,6 +2239,8 @@ function OnTimeUp() {
   const r = Sc.red, w = Sc.white;
   if      (r.W > w.W) DeclareWin('red',   '技あり優勢');
   else if (w.W > r.W) DeclareWin('white', '技あり優勢');
+  else if (r.Y > w.Y) DeclareWin('red',   '有効優勢');
+  else if (w.Y > r.Y) DeclareWin('white', '有効優勢');
   else if (r.S < w.S) DeclareWin('red',   '指導数優勢');
   else if (w.S < r.S) DeclareWin('white', '指導数優勢');
   else StartGS();
@@ -2343,6 +2345,9 @@ function DoSoremade() {
   // 技あり数で比較
   if (r.W > w.W) { DeclareWin('red', '技あり優勢（それまで）'); return; }
   if (w.W > r.W) { DeclareWin('white', '技あり優勢（それまで）'); return; }
+  // 有効数で比較
+  if (r.Y > w.Y) { DeclareWin('red', '有効優勢（それまで）'); return; }
+  if (w.Y > r.Y) { DeclareWin('white', '有効優勢（それまで）'); return; }
   // 指導数で比較（少ない方が優勢）
   if (r.S < w.S) { DeclareWin('red', '指導数優勢（それまで）'); return; }
   if (w.S < r.S) { DeclareWin('white', '指導数優勢（それまで）'); return; }
@@ -2955,6 +2960,8 @@ function StopTimer(side) {
     else if (w.I > r.I) DeclareWin('white', '一本優勢（延長）');
     else if (r.W > w.W) DeclareWin('red',   '技あり優勢（延長）');
     else if (w.W > r.W) DeclareWin('white', '技あり優勢（延長）');
+    else if (r.Y > w.Y) DeclareWin('red',   '有効優勢（延長）');
+    else if (w.Y > r.Y) DeclareWin('white', '有効優勢（延長）');
     else if (r.S < w.S) DeclareWin('red',   '指導数優勢（延長）');
     else if (w.S < r.S) DeclareWin('white', '指導数優勢（延長）');
     else ShowDraw();
