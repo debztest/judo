@@ -448,6 +448,7 @@ body {
 .JudgeBtn--Shido  { background: #633806; color: #FAEEDA; font-size: 13px; }
 .JudgeBtn--Osae   { background: #BA7517; color: #FAEEDA; font-size: 9px;  }
 .JudgeBtn--Yuko.IsCountingYuko { animation: PulseYuko 1s infinite; }
+.JudgeBtn--Osae.IsCountingOsae { animation: PulseYuko 1s infinite; }
 @keyframes PulseYuko {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.6; }
@@ -747,6 +748,7 @@ body {
 .SpVBtn--Shido  { background: #633806; color: #FAEEDA; }
 .SpVBtn--Osae   { background: #BA7517; color: #FAEEDA; font-size: 11px; }
 .SpVBtn--Yuko.IsCountingYuko { animation: PulseYuko 1s infinite; }
+.SpVBtn--Osae.IsCountingOsae { animation: PulseYuko 1s infinite; }
 
 /* スマホ 中央エリア */
 .SpCenter { display: flex; flex-direction: column; gap: 4px; }
@@ -1390,7 +1392,7 @@ body {
           <button class="JudgeBtn JudgeBtn--Waza  IsPaused" id="redBtnW" onclick="AddSc('red','W',1)">技あり</button>
           <button class="JudgeBtn JudgeBtn--Yuko  IsPaused" id="redBtnY" onclick="HandleYuko('red')">有効</button>
           <button class="JudgeBtn JudgeBtn--Shido IsPaused" id="redBtnS" onclick="AddSc('red','S',1)">指導</button>
-          <button class="JudgeBtn JudgeBtn--Osae  IsPaused" id="redBtnO" onclick="StartCountTimer('red','osae')">抑え込み</button>
+          <button class="JudgeBtn JudgeBtn--Osae  IsPaused" id="redBtnO" onclick="HandleOsae('red')">抑え込み</button>
         </div>
         <div class="OsaeBox">
           <div class="OsaeLbl">技カウント時間</div>
@@ -1427,7 +1429,7 @@ body {
           <button class="JudgeBtn JudgeBtn--Waza  IsPaused" id="whiteBtnW" onclick="AddSc('white','W',1)">技あり</button>
           <button class="JudgeBtn JudgeBtn--Yuko  IsPaused" id="whiteBtnY" onclick="HandleYuko('white')">有効</button>
           <button class="JudgeBtn JudgeBtn--Shido IsPaused" id="whiteBtnS" onclick="AddSc('white','S',1)">指導</button>
-          <button class="JudgeBtn JudgeBtn--Osae  IsPaused" id="whiteBtnO" onclick="StartCountTimer('white','osae')">抑え込み</button>
+          <button class="JudgeBtn JudgeBtn--Osae  IsPaused" id="whiteBtnO" onclick="HandleOsae('white')">抑え込み</button>
         </div>
         <div class="OsaeBox">
           <div class="OsaeLbl">技カウント時間</div>
@@ -1491,7 +1493,7 @@ body {
         <button class="SpVBtn SpVBtn--Waza  IsPaused" id="SpRedBtnW" onclick="AddSc('red','W',1)">技あり</button>
         <button class="SpVBtn SpVBtn--Yuko  IsPaused" id="SpRedBtnY" onclick="HandleYuko('red')">有効</button>
         <button class="SpVBtn SpVBtn--Shido IsPaused" id="SpRedBtnS" onclick="AddSc('red','S',1)">指導</button>
-        <button class="SpVBtn SpVBtn--Osae  IsPaused" id="SpRedBtnO" onclick="StartCountTimer('red','osae')">抑え込み</button>
+        <button class="SpVBtn SpVBtn--Osae  IsPaused" id="SpRedBtnO" onclick="HandleOsae('red')">抑え込み</button>
       </div>
 
       <!-- 中央エリア -->
@@ -1584,7 +1586,7 @@ body {
         <button class="SpVBtn SpVBtn--Waza  IsPaused" id="SpWhiteBtnW" onclick="AddSc('white','W',1)">技あり</button>
         <button class="SpVBtn SpVBtn--Yuko  IsPaused" id="SpWhiteBtnY" onclick="HandleYuko('white')">有効</button>
         <button class="SpVBtn SpVBtn--Shido IsPaused" id="SpWhiteBtnS" onclick="AddSc('white','S',1)">指導</button>
-        <button class="SpVBtn SpVBtn--Osae  IsPaused" id="SpWhiteBtnO" onclick="StartCountTimer('white','osae')">抑え込み</button>
+        <button class="SpVBtn SpVBtn--Osae  IsPaused" id="SpWhiteBtnO" onclick="HandleOsae('white')">抑え込み</button>
       </div>
 
     </div>
@@ -2273,6 +2275,8 @@ function ClearAll() {
     El(side + 'BtnI')?.classList.remove('IsPaused');
     El(side + 'BtnY')?.classList.remove('IsCountingYuko');
     El('Sp' + SpSide(side) + 'BtnY')?.classList.remove('IsCountingYuko');
+    El(side + 'BtnO')?.classList.remove('IsCountingOsae');
+    El('Sp' + SpSide(side) + 'BtnO')?.classList.remove('IsCountingOsae');
     TimerState[side] = { run: false, sec: 0, int: null, type: '', osaePhase: '' };
   });
 }
@@ -2608,6 +2612,16 @@ function HandleYuko(side) {
   }
 }
 
+function HandleOsae(side) {
+  if (MatchFinished || !Running) return;
+  const state = TimerState[side];
+  if (state.run && state.type === 'osae') {
+    StopTimer(side);
+  } else {
+    StartCountTimer(side, 'osae');
+  }
+}
+
 /* ===== 抑え込み・有効カウント ===== */
 function StartCountTimer(side, type) {
   if (MatchFinished || !Running) return;
@@ -2617,11 +2631,16 @@ function StartCountTimer(side, type) {
 
   TimerState[side] = { run: true, sec: 0, int: null, type, osaePhase: '' };
   const spKey = 'Sp' + SpSide(side) + 'BtnY';
+  const spOKey = 'Sp' + SpSide(side) + 'BtnO';
   if (type === 'yuko') {
     El(side + 'BtnY')?.classList.add('IsCountingYuko');
     El(spKey)?.classList.add('IsCountingYuko');
+  } else {
+    El(side + 'BtnO')?.classList.add('IsCountingOsae');
+    El(spOKey)?.classList.add('IsCountingOsae');
   }
-  SetOsaeDisabled(side, true);
+  // 抑え込み自身のカウント中はボタンを有効のままにし、再押下で解除できるようにする
+  SetOsaeDisabled(side, type !== 'osae');
 
   const lbl = type === 'osae' ? '抑え込み' : '有効';
   const clr = type === 'osae' ? 'IsActiveOsae' : 'IsActiveYuko';
@@ -2646,6 +2665,8 @@ function StartCountTimer(side, type) {
         if (IsGS) {
           clearInterval(TimerState[side].int); TimerState[side].run = false;
           UpdateTimerDisplay(side, '--', '--', ''); SetOsaeDisabled(side, false);
+          El(side + 'BtnO')?.classList.remove('IsCountingOsae');
+          El(spOKey)?.classList.remove('IsCountingOsae');
           TimerState[side] = { run:false, sec:0, int:null, type:'', osaePhase:'' };
           DeclareWin(side, '有効・それまで（GS抑え込み' + n + '秒）'); return;
         }
@@ -2666,6 +2687,8 @@ function StartCountTimer(side, type) {
           AddLog(side, (IsGS ? '延長戦' : Fmt(Remain)) + ' 技あり合わせ一本！', 'I');
           clearInterval(TimerState[side].int); TimerState[side].run = false;
           UpdateTimerDisplay(side, '--', '--', ''); SetOsaeDisabled(side, false);
+          El(side + 'BtnO')?.classList.remove('IsCountingOsae');
+          El(spOKey)?.classList.remove('IsCountingOsae');
           TimerState[side] = { run:false, sec:0, int:null, type:'', osaePhase:'' };
           DeclareWin(side, '合わせ技一本'); return;
         }
@@ -2680,6 +2703,8 @@ function StartCountTimer(side, type) {
         RenderLog(side);
         clearInterval(TimerState[side].int); TimerState[side].run = false;
         UpdateTimerDisplay(side, '--', '--', ''); SetOsaeDisabled(side, false);
+        El(side + 'BtnO')?.classList.remove('IsCountingOsae');
+        El(spOKey)?.classList.remove('IsCountingOsae');
         TimerState[side] = { run:false, sec:0, int:null, type:'', osaePhase:'' };
         DeclareWin(side, '抑え込み一本（' + n + '秒）'); return;
       }
@@ -2709,6 +2734,8 @@ function StopTimer(side) {
     clearInterval(TimerState[side].int);
     TimerState[side].run = false;
     UpdateTimerDisplay(side, '--', '--', '');
+    El(side + 'BtnO')?.classList.remove('IsCountingOsae');
+    El('Sp' + SpSide(side) + 'BtnO')?.classList.remove('IsCountingOsae');
     TimerState[side] = { run: false, sec: 0, int: null, type: '', osaePhase: '' };
     SetOsaeDisabled(side, false);
     // それまで1回目と同じ：延長終了表示・まて・ブザー・判定
@@ -2743,6 +2770,8 @@ function StopTimer(side) {
       El('Sp' + SpSide(side) + 'BtnY')?.classList.remove('IsCountingYuko');
     }
   }
+  El(side + 'BtnO')?.classList.remove('IsCountingOsae');
+  El('Sp' + SpSide(side) + 'BtnO')?.classList.remove('IsCountingOsae');
   UpdateTimerDisplay(side, '--', '--', '');
   TimerState[side] = { run: false, sec: 0, int: null, type: '', osaePhase: '' };
   SetOsaeDisabled(side, false);
