@@ -1190,6 +1190,7 @@ body {
         <option value="matchMin">試合時間（分）</option>
         <option value="wazaSec">抑え込み 技あり（秒）</option>
         <option value="yukoSec">抑え込み 有効（秒）</option>
+        <option value="shidoDiff">指導差で勝ち（差）</option>
         <option value="custom">カスタム</option>
       </select>
     </div>
@@ -1703,7 +1704,7 @@ body {
 'use strict';
 
 /* ===== 設定 ===== */
-let Cfg = { matchMin: 4, matchSec: 0, wazaSec: 10, yukoSec: 5 };
+let Cfg = { matchMin: 4, matchSec: 0, wazaSec: 10, yukoSec: 5, shidoDiffWin: null };
 let CustomRules = [];
 
 /* ===== 試合状態 ===== */
@@ -1849,6 +1850,7 @@ function UpdateAddRuleLabel() {
     matchMin:    '試合時間（分）',
     wazaSec:     '技あり判定（秒）',
     yukoSec:     '有効判定（秒）',
+    shidoDiff:   '指導差（差）',
     custom:      '値'
   };
   El('AddRuleValLabel').textContent = labels[type] || '値';
@@ -1865,12 +1867,14 @@ function ConfirmAddRule() {
     matchMin:    '試合時間',
     wazaSec:     '抑え込み技あり',
     yukoSec:     '抑え込み有効',
+    shidoDiff:   '指導差で勝ち',
     custom:      cn || 'カスタム'
   };
-  const unit = type === 'matchMin' ? '分' : type === 'custom' ? '' : '秒';
-  if (type === 'matchMin')     { Cfg.matchMin     = val; El('SetupMatchMin').textContent = val; }
-  else if (type === 'wazaSec') { Cfg.wazaSec      = val; El('SetupWazaSec').textContent  = val; }
-  else if (type === 'yukoSec') { Cfg.yukoSec      = val; El('SetupYukoSec').textContent  = val; }
+  const unit = type === 'matchMin' ? '分' : type === 'shidoDiff' ? '差' : type === 'custom' ? '' : '秒';
+  if (type === 'matchMin')       { Cfg.matchMin     = val; El('SetupMatchMin').textContent = val; }
+  else if (type === 'wazaSec')   { Cfg.wazaSec      = val; El('SetupWazaSec').textContent  = val; }
+  else if (type === 'yukoSec')   { Cfg.yukoSec      = val; El('SetupYukoSec').textContent  = val; }
+  else if (type === 'shidoDiff') { Cfg.shidoDiffWin = val; }
   CustomRules.push({ type, label: typeLabels[type], val, unit, note, enabled: true });
   RenderCustomRules();
   CloseAddRule();
@@ -2813,13 +2817,22 @@ function AddSc(side, key, val) {
       AddLog(side, (IsGS ? '延長戦' : Fmt(Remain)) + ' 技あり合わせ一本！', 'I');
       DeclareWin(side, '合わせ技一本');
     }
-    if (key === 'S' && Sc[side]['S'] >= 3) {
-      const opp       = side === 'red' ? 'white' : 'red';
-      const shidoEntry = Logs[side][0];
-      const oppId     = AddLog(opp, Fmt(Remain) + ' 反則勝ち（相手指導3回）', null, false, side, 'S');
-      if (shidoEntry) { shidoEntry.linkedSide = opp; shidoEntry.linkedId = oppId; }
-      RenderLog(side);
-      DeclareWin(opp, '反則勝ち');
+    if (key === 'S') {
+      const opp = side === 'red' ? 'white' : 'red';
+      if (Sc[side]['S'] >= 3) {
+        const shidoEntry = Logs[side][0];
+        const oppId = AddLog(opp, Fmt(Remain) + ' 反則勝ち（相手指導3回）', null, false, side, 'S');
+        if (shidoEntry) { shidoEntry.linkedSide = opp; shidoEntry.linkedId = oppId; }
+        RenderLog(side);
+        DeclareWin(opp, '反則勝ち');
+      } else if (Cfg.shidoDiffWin && (Sc[side]['S'] - Sc[opp]['S']) >= Cfg.shidoDiffWin) {
+        // ローカルルール：指導差が設定値に達したら相手の勝ち
+        const shidoEntry = Logs[side][0];
+        const oppId = AddLog(opp, Fmt(Remain) + ' 指導差優勢勝ち（指導差' + Cfg.shidoDiffWin + '）', null, false, side, 'S');
+        if (shidoEntry) { shidoEntry.linkedSide = opp; shidoEntry.linkedId = oppId; }
+        RenderLog(side);
+        DeclareWin(opp, '指導差優勢');
+      }
     }
   }
 }
