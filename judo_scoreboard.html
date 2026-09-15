@@ -448,6 +448,12 @@ body {
 }
 .ScoreBox:hover  { border-color: #185FA5; }
 .ScoreBox:active { background: #f0f6ff; }
+.ScoreBox--Osae {
+  background: #E3F2A6;
+  border-color: #C3DE6C;
+}
+.ScoreBox--Osae:hover  { border-color: #9CB84A; }
+.ScoreBox--Osae:active { background: #D6EB8C; }
 .ScoreNum { font-size: 20px; font-weight: 600; color: #1a1a1a; line-height: 1; }
 .ScoreNum--Ippon { color: #A32D2D; }
 .ScoreNum--Osae  { color: #BA7517; }
@@ -836,6 +842,11 @@ body {
   cursor: pointer;
 }
 .SpScoreBox:active { background: #f0f6ff; }
+.SpScoreBox--Osae {
+  background: #E3F2A6;
+  border-color: #C3DE6C;
+}
+.SpScoreBox--Osae:active { background: #D6EB8C; }
 .SpScoreNum { font-size: 22px; font-weight: 700; color: #1a1a1a; line-height: 1; }
 .SpScoreNum--Ippon { color: #A32D2D; }
 .SpScoreNum--Osae  { color: #BA7517; }
@@ -1508,7 +1519,7 @@ body {
           <div class="ScoreBox" onclick="OpenRecordEditList('red','W')"><div class="ScoreNum"                 id="redW">0</div></div>
           <div class="ScoreBox" onclick="OpenRecordEditList('red','Y')"><div class="ScoreNum"                 id="redY">0</div></div>
           <div class="ScoreBox" onclick="OpenRecordEditList('red','S')"><div class="ScoreNum"                 id="redS">0</div></div>
-          <div class="ScoreBox" onclick="OpenRecordEditList('red','O')"><div class="ScoreNum ScoreNum--Osae"  id="redO">0</div><span class="ScoreUnit">秒</span></div>
+          <div class="ScoreBox ScoreBox--Osae" onclick="OpenRecordEditList('red','O')"><div class="ScoreNum ScoreNum--Osae"  id="redO">0</div><span class="ScoreUnit">秒</span></div>
         </div>
         <div class="JudgeBtnGrid">
           <button class="JudgeBtn JudgeBtn--Ippon IsPaused" id="redBtnI" onclick="AddSc('red','I',1)">一本</button>
@@ -1545,7 +1556,7 @@ body {
           <div class="ScoreBox" onclick="OpenRecordEditList('white','W')"><div class="ScoreNum"                 id="whiteW">0</div></div>
           <div class="ScoreBox" onclick="OpenRecordEditList('white','Y')"><div class="ScoreNum"                 id="whiteY">0</div></div>
           <div class="ScoreBox" onclick="OpenRecordEditList('white','S')"><div class="ScoreNum"                 id="whiteS">0</div></div>
-          <div class="ScoreBox" onclick="OpenRecordEditList('white','O')"><div class="ScoreNum ScoreNum--Osae"  id="whiteO">0</div><span class="ScoreUnit">秒</span></div>
+          <div class="ScoreBox ScoreBox--Osae" onclick="OpenRecordEditList('white','O')"><div class="ScoreNum ScoreNum--Osae"  id="whiteO">0</div><span class="ScoreUnit">秒</span></div>
         </div>
         <div class="JudgeBtnGrid">
           <button class="JudgeBtn JudgeBtn--Ippon IsPaused" id="whiteBtnI" onclick="AddSc('white','I',1)">一本</button>
@@ -1639,7 +1650,7 @@ body {
               <div class="SpScoreBox" onclick="OpenRecordEditList('red','W')"><div class="SpScoreNum"                   id="SpRedW">0</div></div>
               <div class="SpScoreBox" onclick="OpenRecordEditList('red','Y')"><div class="SpScoreNum"                   id="SpRedY">0</div></div>
               <div class="SpScoreBox" onclick="OpenRecordEditList('red','S')"><div class="SpScoreNum"                   id="SpRedS">0</div></div>
-              <div class="SpScoreBox" onclick="OpenRecordEditList('red','O')"><div class="SpScoreNum SpScoreNum--Osae"  id="SpRedO">0</div><span class="SpScoreUnit">秒</span></div>
+              <div class="SpScoreBox SpScoreBox--Osae" onclick="OpenRecordEditList('red','O')"><div class="SpScoreNum SpScoreNum--Osae"  id="SpRedO">0</div><span class="SpScoreUnit">秒</span></div>
             </div>
             <div class="SpOsaeBox">
               <div class="SpOsaeLbl">技カウント</div>
@@ -1675,7 +1686,7 @@ body {
               <div class="SpScoreBox" onclick="OpenRecordEditList('white','W')"><div class="SpScoreNum"                   id="SpWhiteW">0</div></div>
               <div class="SpScoreBox" onclick="OpenRecordEditList('white','Y')"><div class="SpScoreNum"                   id="SpWhiteY">0</div></div>
               <div class="SpScoreBox" onclick="OpenRecordEditList('white','S')"><div class="SpScoreNum"                   id="SpWhiteS">0</div></div>
-              <div class="SpScoreBox" onclick="OpenRecordEditList('white','O')"><div class="SpScoreNum SpScoreNum--Osae"  id="SpWhiteO">0</div><span class="SpScoreUnit">秒</span></div>
+              <div class="SpScoreBox SpScoreBox--Osae" onclick="OpenRecordEditList('white','O')"><div class="SpScoreNum SpScoreNum--Osae"  id="SpWhiteO">0</div><span class="SpScoreUnit">秒</span></div>
             </div>
             <div class="SpOsaeBox">
               <div class="SpOsaeLbl">技カウント</div>
