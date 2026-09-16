@@ -2749,25 +2749,7 @@ function ApplyRecordEdit(id, newKey) {
   RenderLog(side);
   CloseRecordEditModal();
 
-  // AddScと同じ勝敗トリガー（合わせ技一本・指導3回・指導差ルール）を判定変更後も適用する
-  const opp = side === 'red' ? 'white' : 'red';
-  if (newKey === 'I') {
-    DeclareWin(side, '一本（判定変更）');
-  } else if (newKey === 'W' && Sc[side]['W'] >= 2) {
-    Sc[side]['I']++; UpdateScores();
-    AddLog(side, (IsGS ? '延長戦' : Fmt(Remain)) + ' 技あり合わせ一本！', 'I');
-    DeclareWin(side, '合わせ技一本（判定変更）');
-  } else if (newKey === 'S' && Sc[side]['S'] >= 3) {
-    const oppId = AddLog(opp, Fmt(Remain) + ' 反則勝ち（相手指導3回）', null, false, side, 'S');
-    entry.linkedSide = opp; entry.linkedId = oppId;
-    RenderLog(side);
-    DeclareWin(opp, '反則勝ち');
-  } else if (newKey === 'S' && Cfg.shidoDiffWin && (Sc[side]['S'] - Sc[opp]['S']) >= Cfg.shidoDiffWin) {
-    const oppId = AddLog(opp, Fmt(Remain) + ' 指導差優勢勝ち（指導差' + Cfg.shidoDiffWin + '）', null, false, side, 'S');
-    entry.linkedSide = opp; entry.linkedId = oppId;
-    RenderLog(side);
-    DeclareWin(opp, '指導差優勢');
-  } else {
+  if (!CheckScoreCascade(side, newKey, entry)) {
     CheckWinCondition();
     UpdateHajimeBtn();
     if (!MatchFinished && WinnerSide) { UpdateLamps(WinnerSide, false); WinnerSide = null; }
@@ -2821,6 +2803,43 @@ function CloseWin() {
 }
 
 /* ===== スコア加算 ===== */
+// side側のkeyスコアが今まさに加算された前提で、一本・合わせ技一本・指導による
+// 反則負けなどの連鎖判定を行う。AddScと記録編集（判定変更）の両方から呼ばれる共通処理。
+// sourceEntryは指導由来の勝敗をログ上でリンクする対象（省略時はLogs[side][0]＝
+// AddScが直前にunshiftした記録。判定変更時は変更対象のentryそのものを渡す）。
+// 何らかの勝敗が確定した場合はtrueを返す。
+function CheckScoreCascade(side, key, sourceEntry) {
+  const opp = side === 'red' ? 'white' : 'red';
+  const linkEntry = sourceEntry || Logs[side][0];
+  if (key === 'I') {
+    DeclareWin(side, '一本');
+    return true;
+  }
+  if (key === 'W' && Sc[side]['W'] >= 2) {
+    Sc[side]['I']++;
+    UpdateScores();
+    AddLog(side, (IsGS ? '延長戦' : Fmt(Remain)) + ' 技あり合わせ一本！', 'I');
+    DeclareWin(side, '合わせ技一本');
+    return true;
+  }
+  if (key === 'S' && Sc[side]['S'] >= 3) {
+    const oppId = AddLog(opp, Fmt(Remain) + ' 反則勝ち（相手指導3回）', null, false, side, 'S');
+    if (linkEntry) { linkEntry.linkedSide = opp; linkEntry.linkedId = oppId; }
+    RenderLog(side);
+    DeclareWin(opp, '反則勝ち');
+    return true;
+  }
+  if (key === 'S' && Cfg.shidoDiffWin && (Sc[side]['S'] - Sc[opp]['S']) >= Cfg.shidoDiffWin) {
+    // ローカルルール：指導差が設定値に達したら相手の勝ち
+    const oppId = AddLog(opp, Fmt(Remain) + ' 指導差優勢勝ち（指導差' + Cfg.shidoDiffWin + '）', null, false, side, 'S');
+    if (linkEntry) { linkEntry.linkedSide = opp; linkEntry.linkedId = oppId; }
+    RenderLog(side);
+    DeclareWin(opp, '指導差優勢');
+    return true;
+  }
+  return false;
+}
+
 function AddSc(side, key, val) {
   // まて中（Running=false）でも判定操作はできる。試合終了後のみ不可
   if (MatchFinished) return;
@@ -2830,30 +2849,7 @@ function AddSc(side, key, val) {
     const labels = { I:'一本！', W:'技あり！', Y:'有効！', S:'指導！', O:'抑え込み！' };
     const timeLabel = IsGS ? '延長戦' : Fmt(Remain);
     AddLog(side, timeLabel + ' ' + labels[key], key);
-    if (key === 'I') DeclareWin(side, '一本');
-    if (key === 'W' && Sc[side]['W'] >= 2) {
-      Sc[side]['I']++;
-      UpdateScores();
-      AddLog(side, (IsGS ? '延長戦' : Fmt(Remain)) + ' 技あり合わせ一本！', 'I');
-      DeclareWin(side, '合わせ技一本');
-    }
-    if (key === 'S') {
-      const opp = side === 'red' ? 'white' : 'red';
-      if (Sc[side]['S'] >= 3) {
-        const shidoEntry = Logs[side][0];
-        const oppId = AddLog(opp, Fmt(Remain) + ' 反則勝ち（相手指導3回）', null, false, side, 'S');
-        if (shidoEntry) { shidoEntry.linkedSide = opp; shidoEntry.linkedId = oppId; }
-        RenderLog(side);
-        DeclareWin(opp, '反則勝ち');
-      } else if (Cfg.shidoDiffWin && (Sc[side]['S'] - Sc[opp]['S']) >= Cfg.shidoDiffWin) {
-        // ローカルルール：指導差が設定値に達したら相手の勝ち
-        const shidoEntry = Logs[side][0];
-        const oppId = AddLog(opp, Fmt(Remain) + ' 指導差優勢勝ち（指導差' + Cfg.shidoDiffWin + '）', null, false, side, 'S');
-        if (shidoEntry) { shidoEntry.linkedSide = opp; shidoEntry.linkedId = oppId; }
-        RenderLog(side);
-        DeclareWin(opp, '指導差優勢');
-      }
-    }
+    CheckScoreCascade(side, key);
   }
 }
 
