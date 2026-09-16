@@ -1713,6 +1713,9 @@ let Running = false;
 let TimerInterval = null;
 let IsGS = false;
 let GsElapsed = 0;
+// 規定時間が0になった時点で抑え込み中だった場合、GSには入らずタイマー0のまま
+// 抑え込みを継続し、一本または解除で試合を決するための状態フラグ
+let TimeExpiredHoldPending = false;
 let MatchFinished = false;
 let WinnerSide = null;
 
@@ -2230,16 +2233,12 @@ function DoHajime() {
 }
 
 function OnTimeUp() {
-  // 抑え込み中なら抑え込みを優先してGS継続
+  // 抑え込み中なら、GSには入らずタイマー0のまま抑え込みを優先して継続
   const redOsae   = TimerState.red.run   && TimerState.red.type   === 'osae';
   const whiteOsae = TimerState.white.run && TimerState.white.type === 'osae';
   if (redOsae || whiteOsae) {
-    // タイマーはすでに止まっているが抑え込みカウントは継続→GSへ
-    IsGS = true;
-    GsElapsed = 0;
-    ['PcGsTag','SpGsTag'].forEach(id => { const e = El(id); if (e) e.style.display = 'inline-block'; });
-    ['PcGsLive','SpGsLive'].forEach(id => { const e = El(id); if (e) e.style.display = 'inline-block'; });
-    UpdateTimer();
+    // タイマー表示は0のまま。一本になるか、抑え込みが解けた時点で試合終了とする
+    TimeExpiredHoldPending = true;
     // はじめは押さずに抑え込みカウントだけ継続（インターバルはStartCountTimerで動いている）
     return;
   }
@@ -2430,6 +2429,7 @@ function DoResetMatch() {
   MatchFinished = false;
   IsGS = false;
   GsElapsed = 0;
+  TimeExpiredHoldPending = false;
   Remain = Cfg.matchMin * 60 + Cfg.matchSec;
   ClearAll();
   ['PcGsTag','SpGsTag','PcGsLive','SpGsLive'].forEach(id => { const e = El(id); if (e) e.style.display = 'none'; });
@@ -2468,6 +2468,7 @@ function ExecuteBack() {
   MatchFinished = false;
   IsGS = false;
   GsElapsed = 0;
+  TimeExpiredHoldPending = false;
   ClearAll();
   MatchRecords = [];
   El('WinBanner').className = 'WinBanner';
@@ -2884,9 +2885,6 @@ function StartCountTimer(side, type) {
     const n     = TimerState[side].sec;
     const phase = TimerState[side].osaePhase;
     UpdateTimerDisplay(side, lbl, n + '秒', clr);
-    // 規定時間終了と同時に抑え込み継続でGSへ入った場合、メインのタイマーインターバルが
-    // 止まっているのでここでGS経過時間を進める（通常時はメインループ側が進める）
-    if (IsGS && !Running) { GsElapsed++; UpdateTimer(); }
 
     if (type === 'osae') {
       // 抑込スコア欄は経過秒数をそのままリアルタイム表示する
@@ -2953,12 +2951,12 @@ function StartCountTimer(side, type) {
 }
 
 function StopTimer(side) {
-  const sec   = TimerState[side].sec;
-  const type  = TimerState[side].type;
-  const wasGS = IsGS;
+  const sec = TimerState[side].sec;
+  const type = TimerState[side].type;
 
-  // GS中の抑え込み解除 → それまで1回目と同じ動作（ブザー・延長終了・判定）
-  if (wasGS && !MatchFinished && type === 'osae') {
+  // 規定時間終了後、抑え込みが解けた時点で判定（技あり優勢→有効優勢→指導数優勢、
+  // それでも決着しなければGSへ。タイマーは0のままだったので延長終了表示は不要）
+  if (TimeExpiredHoldPending && !MatchFinished && type === 'osae') {
     clearInterval(TimerState[side].int);
     TimerState[side].run = false;
     UpdateTimerDisplay(side, '--', '--', '');
@@ -2967,20 +2965,15 @@ function StopTimer(side) {
     RecordOsaeHistory(side, sec);
     TimerState[side] = { run: false, sec: 0, int: null, type: '', osaePhase: '' };
     SetOsaeDisabled(side, false);
-    // それまで1回目と同じ：延長終了表示・まて・ブザー・判定
-    ShowExtensionEnd();
-    DoMate();
-    StartEndSound();
+    TimeExpiredHoldPending = false;
     const r = Sc.red, w = Sc.white;
-    if      (r.I > w.I) DeclareWin('red',   '一本優勢（延長）');
-    else if (w.I > r.I) DeclareWin('white', '一本優勢（延長）');
-    else if (r.W > w.W) DeclareWin('red',   '技あり優勢（延長）');
-    else if (w.W > r.W) DeclareWin('white', '技あり優勢（延長）');
-    else if (r.Y > w.Y) DeclareWin('red',   '有効優勢（延長）');
-    else if (w.Y > r.Y) DeclareWin('white', '有効優勢（延長）');
-    else if (r.S < w.S) DeclareWin('red',   '指導数優勢（延長）');
-    else if (w.S < r.S) DeclareWin('white', '指導数優勢（延長）');
-    else ShowDraw();
+    if      (r.W > w.W) DeclareWin('red',   '技あり優勢');
+    else if (w.W > r.W) DeclareWin('white', '技あり優勢');
+    else if (r.Y > w.Y) DeclareWin('red',   '有効優勢');
+    else if (w.Y > r.Y) DeclareWin('white', '有効優勢');
+    else if (r.S < w.S) DeclareWin('red',   '指導数優勢');
+    else if (w.S < r.S) DeclareWin('white', '指導数優勢');
+    else StartGS();
     return;
   }
 
