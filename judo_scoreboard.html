@@ -2749,8 +2749,24 @@ function ApplyRecordEdit(id, newKey) {
   RenderLog(side);
   CloseRecordEditModal();
 
+  // AddScと同じ勝敗トリガー（合わせ技一本・指導3回・指導差ルール）を判定変更後も適用する
+  const opp = side === 'red' ? 'white' : 'red';
   if (newKey === 'I') {
     DeclareWin(side, '一本（判定変更）');
+  } else if (newKey === 'W' && Sc[side]['W'] >= 2) {
+    Sc[side]['I']++; UpdateScores();
+    AddLog(side, (IsGS ? '延長戦' : Fmt(Remain)) + ' 技あり合わせ一本！', 'I');
+    DeclareWin(side, '合わせ技一本（判定変更）');
+  } else if (newKey === 'S' && Sc[side]['S'] >= 3) {
+    const oppId = AddLog(opp, Fmt(Remain) + ' 反則勝ち（相手指導3回）', null, false, side, 'S');
+    entry.linkedSide = opp; entry.linkedId = oppId;
+    RenderLog(side);
+    DeclareWin(opp, '反則勝ち');
+  } else if (newKey === 'S' && Cfg.shidoDiffWin && (Sc[side]['S'] - Sc[opp]['S']) >= Cfg.shidoDiffWin) {
+    const oppId = AddLog(opp, Fmt(Remain) + ' 指導差優勢勝ち（指導差' + Cfg.shidoDiffWin + '）', null, false, side, 'S');
+    entry.linkedSide = opp; entry.linkedId = oppId;
+    RenderLog(side);
+    DeclareWin(opp, '指導差優勢');
   } else {
     CheckWinCondition();
     UpdateHajimeBtn();
