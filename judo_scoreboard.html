@@ -2815,14 +2815,6 @@ function CheckScoreCascade(side, key, sourceEntry) {
     DeclareWin(side, '一本');
     return true;
   }
-  if (key === 'Y' && Sc[side]['Y'] >= 2) {
-    // 運用ルール：有効2つで技あり1つ分に昇格する
-    Sc[side]['Y'] -= 2;
-    Sc[side]['W']++;
-    UpdateScores();
-    AddLog(side, (IsGS ? '延長戦' : Fmt(Remain)) + ' 有効2つで技あり昇格！', 'W');
-    return CheckScoreCascade(side, 'W', linkEntry);
-  }
   if (key === 'W' && Sc[side]['W'] >= 2) {
     Sc[side]['I']++;
     UpdateScores();
