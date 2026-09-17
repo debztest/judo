@@ -1753,10 +1753,12 @@ let Sc = {
   white: { I: 0, W: 0, Y: 0, S: 0, O: 0 }
 };
 let Logs = { red: [], white: [] };
+// LogsとOsaeHistoryは「抑え込み」一覧でまとめて表示・時系列ソートするため、
+// idと並び順(osaeSeq)を共有の採番元から発行する
 let LogIdCounter = 0;
 // 抑え込みの履歴（記録欄には出さず、記録編集モーダルの一覧専用）
 let OsaeHistory = { red: [], white: [] };
-let OsaeHistIdCounter = 0;
+let OsaeSeq = 0;
 let IsMobile = false;
 let IsSpLandscape = false;
 
@@ -2632,7 +2634,7 @@ function AddLog(side, text, key = null, gray = false, linkedSide = null, linkedK
 
 // 直前にAddLogした記録に、抑え込みの経過秒数を付与する（秒数の訂正機能で使う）
 function TagLogSec(side, sec) {
-  if (Logs[side][0]) Logs[side][0].sec = sec;
+  if (Logs[side][0]) { Logs[side][0].sec = sec; Logs[side][0].osaeSeq = OsaeSeq++; }
 }
 
 // 抑え込みの経過秒数から、どの判定に相当するかを返す（該当なしはnull）
@@ -2734,8 +2736,11 @@ function OpenRecordEditList(side, key) {
 function RenderRecordEditList() {
   const list = El('RecordEditList');
   list.innerHTML = '';
+  // 抑え込みの一覧は、昇格しなかった記録（OsaeHistory）と、既に判定へ
+  // 昇格した記録（Logs側でsecを持つもの）を合わせて時系列順に表示する
   const entries = RecordEditKey === 'O'
-    ? OsaeHistory[RecordEditSide]
+    ? [...OsaeHistory[RecordEditSide], ...Logs[RecordEditSide].filter(e => typeof e.sec === 'number')]
+        .sort((a, b) => b.osaeSeq - a.osaeSeq)
     : Logs[RecordEditSide].filter(e => e.category === RecordEditKey);
   if (entries.length === 0) {
     const div = document.createElement('div');
@@ -2754,10 +2759,17 @@ function RenderRecordEditList() {
 }
 
 function OpenRecordEditChange(id) {
-  const isOsae = RecordEditKey === 'O';
-  const entry  = isOsae
-    ? OsaeHistory[RecordEditSide].find(e => e.id === id)
-    : Logs[RecordEditSide].find(e => e.id === id);
+  // 抑え込み一覧はOsaeHistoryとLogsを合わせて表示しているため、
+  // idがどちらの配列に属するかで所属を判定する
+  let entry, isOsae;
+  if (RecordEditKey === 'O') {
+    entry = OsaeHistory[RecordEditSide].find(e => e.id === id);
+    isOsae = true;
+    if (!entry) { entry = Logs[RecordEditSide].find(e => e.id === id); isOsae = false; }
+  } else {
+    entry = Logs[RecordEditSide].find(e => e.id === id);
+    isOsae = false;
+  }
   if (!entry) return;
   RecordEditChangeEntry = entry;
   RecordEditChangeInOsaeHistory = isOsae;
@@ -2855,7 +2867,7 @@ function AdjustRecordSec(delta) {
       Logs[side] = Logs[side].filter(e => e.id !== entry.id);
     }
     if (newTier === null) {
-      const newEntry = { id: OsaeHistIdCounter++, text, sec: newSec };
+      const newEntry = { id: LogIdCounter++, text, sec: newSec, osaeSeq: OsaeSeq++ };
       OsaeHistory[side].unshift(newEntry);
       RecordEditChangeEntry = newEntry;
       RecordEditChangeInOsaeHistory = true;
@@ -2866,6 +2878,7 @@ function AdjustRecordSec(delta) {
       const newId = AddLog(side, text, newTier);
       const newEntry = Logs[side].find(e => e.id === newId);
       newEntry.sec = newSec;
+      newEntry.osaeSeq = OsaeSeq++;
       RecordEditChangeEntry = newEntry;
       RecordEditChangeInOsaeHistory = false;
       if (!CheckScoreCascade(side, newTier, newEntry)) {
@@ -3030,7 +3043,7 @@ function HandleOsae(side) {
 function RecordOsaeHistory(side, sec) {
   if (sec <= 0) return;
   const timeLabel = IsGS ? '延長戦' : Fmt(Remain);
-  OsaeHistory[side].unshift({ id: OsaeHistIdCounter++, text: timeLabel + ' 抑え込み（' + sec + '秒）', sec });
+  OsaeHistory[side].unshift({ id: LogIdCounter++, text: timeLabel + ' 抑え込み（' + sec + '秒）', sec, osaeSeq: OsaeSeq++ });
 }
 
 /* ===== 抑え込みカウント ===== */
