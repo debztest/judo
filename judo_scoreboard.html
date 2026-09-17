@@ -2211,10 +2211,10 @@ function UpdateTimer() {
     if (pc) { pc.textContent = t; pc.className = 'TimerVal IsGS' + (Running ? ' IsRunning' : ''); }
     if (sp) { sp.textContent = t; sp.className = 'SpTimer IsGS'  + (Running ? ' IsRunning' : ''); }
   } else if (TimeExpiredHoldPending) {
-    // 規定時間終了後、抑え込み継続中は0秒から数え上げる
+    // 規定時間終了後、抑え込み継続中は0秒から数え上げる（表示はGS中と同じ赤字）
     const t = Fmt(HoldOvertimeElapsed);
-    if (pc) { pc.textContent = t; pc.className = 'TimerVal'; }
-    if (sp) { sp.textContent = t; sp.className = 'SpTimer'; }
+    if (pc) { pc.textContent = t; pc.className = 'TimerVal IsGS'; }
+    if (sp) { sp.textContent = t; sp.className = 'SpTimer IsGS'; }
   } else {
     const t = Fmt(Remain);
     if (pc) { pc.textContent = t; pc.className = Running ? 'TimerVal IsRunning' : 'TimerVal'; }
@@ -2239,13 +2239,15 @@ function DoHajime() {
 }
 
 function OnTimeUp() {
-  // 抑え込み中なら、GSには入らずタイマー0のまま抑え込みを優先して継続
+  // 抑え込み中なら、勝敗判定はGSに入らないが、表示は延長中と同じ（赤字・延長タグ）にする
   const redOsae   = TimerState.red.run   && TimerState.red.type   === 'osae';
   const whiteOsae = TimerState.white.run && TimerState.white.type === 'osae';
   if (redOsae || whiteOsae) {
     // タイマーは0から数え上げる。一本になるか、抑え込みが解けた時点で試合終了とする
     TimeExpiredHoldPending = true;
     HoldOvertimeElapsed = 0;
+    ['PcGsTag','SpGsTag'].forEach(id => { const e = El(id); if (e) e.style.display = 'inline-block'; });
+    ['PcGsLive','SpGsLive'].forEach(id => { const e = El(id); if (e) e.style.display = 'inline-block'; });
     UpdateTimer();
     // はじめは押さずに抑え込みカウントだけ継続（インターバルはStartCountTimerで動いている）
     return;
