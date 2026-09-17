@@ -524,6 +524,23 @@ body {
 .OsaeNum.IsYuko  { color: #0F6E56; }
 .OsaeNum.IsWaza  { color: #185FA5; }
 .OsaeNum.IsIppon { color: #A32D2D; }
+.OsaeAdjBtn {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: #5F5E5A;
+  color: #F1EFE8;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.OsaeAdjBtn:disabled { opacity: 0.3; cursor: not-allowed; }
 
 /* ランプバー（PC） */
 .LampBar {
@@ -889,6 +906,23 @@ body {
 .SpOsaeNum.IsYuko  { color: #0F6E56; }
 .SpOsaeNum.IsWaza  { color: #185FA5; }
 .SpOsaeNum.IsIppon { color: #A32D2D; }
+.SpOsaeAdjBtn {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: #5F5E5A;
+  color: #F1EFE8;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.SpOsaeAdjBtn:disabled { opacity: 0.3; cursor: not-allowed; }
 
 /* 記録ボックス（スマホ） */
 .SpLogBox {
@@ -1515,6 +1549,8 @@ body {
           <div class="OsaeInner">
             <span class="OsaeLabel" id="redTimerLabel">--</span>
             <span class="OsaeNum"   id="redTimerVal">--</span>
+            <button class="OsaeAdjBtn" id="redOsaeAdjMinus" onclick="AdjustOsaeCorrection('red',-1)">−</button>
+            <button class="OsaeAdjBtn" id="redOsaeAdjPlus"  onclick="AdjustOsaeCorrection('red',1)">＋</button>
           </div>
         </div>
         <div class="LampBar" id="redLamp">赤ランプ</div>
@@ -1551,6 +1587,8 @@ body {
           <div class="OsaeInner">
             <span class="OsaeLabel" id="whiteTimerLabel">--</span>
             <span class="OsaeNum"   id="whiteTimerVal">--</span>
+            <button class="OsaeAdjBtn" id="whiteOsaeAdjMinus" onclick="AdjustOsaeCorrection('white',-1)">−</button>
+            <button class="OsaeAdjBtn" id="whiteOsaeAdjPlus"  onclick="AdjustOsaeCorrection('white',1)">＋</button>
           </div>
         </div>
         <div class="LampBar" id="whiteLamp">白ランプ</div>
@@ -1637,6 +1675,8 @@ body {
               <div class="SpOsaeInner">
                 <span class="SpOsaeLabel" id="SpRedTimerLabel">--</span>
                 <span class="SpOsaeNum"   id="SpRedTimerVal">--</span>
+                <button class="SpOsaeAdjBtn" id="SpRedOsaeAdjMinus" onclick="AdjustOsaeCorrection('red',-1)">−</button>
+                <button class="SpOsaeAdjBtn" id="SpRedOsaeAdjPlus"  onclick="AdjustOsaeCorrection('red',1)">＋</button>
               </div>
             </div>
             <div class="SpLogBox">
@@ -1672,6 +1712,8 @@ body {
               <div class="SpOsaeInner">
                 <span class="SpOsaeLabel" id="SpWhiteTimerLabel">--</span>
                 <span class="SpOsaeNum"   id="SpWhiteTimerVal">--</span>
+                <button class="SpOsaeAdjBtn" id="SpWhiteOsaeAdjMinus" onclick="AdjustOsaeCorrection('white',-1)">−</button>
+                <button class="SpOsaeAdjBtn" id="SpWhiteOsaeAdjPlus"  onclick="AdjustOsaeCorrection('white',1)">＋</button>
               </div>
             </div>
             <div class="SpLogBox">
@@ -2513,22 +2555,43 @@ function UpdateScores() {
 
 /* ===== ボタン制御 ===== */
 function UpdateBtnPaused() {
-  // 判定ボタン（一本・技あり・有効・指導・抑え込み）は、まて中でも押せるようにする
-  // （試合終了後のみ操作不可）
+  // 判定ボタン（一本・技あり・有効・指導）は、まて中でも押せるようにする
+  // （試合終了後のみ操作不可）。抑え込みだけは別扱い（下で判定）
   ['red','white'].forEach(side => {
-    ['I','W','Y','S','O'].forEach(k => {
+    ['I','W','Y','S'].forEach(k => {
       const pc = El(side + 'Btn' + k);
       const sp = El('Sp' + SpSide(side) + 'Btn' + k);
       if (pc) { if (!MatchFinished) pc.classList.remove('IsPaused'); else pc.classList.add('IsPaused'); }
       if (sp) { if (!MatchFinished) sp.classList.remove('IsPaused'); else sp.classList.add('IsPaused'); }
     });
+    // 抑え込みは、実行中（解除は常に可能）かRunning中（新規開始可能）でなければ押せない
+    const osaeOk = Running || TimerState[side].run;
+    const pcO = El(side + 'BtnO');
+    const spO = El('Sp' + SpSide(side) + 'BtnO');
+    if (pcO) { if (osaeOk && !MatchFinished) pcO.classList.remove('IsPaused'); else pcO.classList.add('IsPaused'); }
+    if (spO) { if (osaeOk && !MatchFinished) spO.classList.remove('IsPaused'); else spO.classList.add('IsPaused'); }
   });
   // それまでボタンは IsPaused を当てない（IsDisabled で制御）
   ['PcSoremadeBtn','SpSoremadeBtn'].forEach(id => {
     const b = El(id); if (b) b.classList.remove('IsPaused');
   });
+  UpdateOsaeAdjBtns();
   UpdateCtrlBtns();
   UpdateGearMenuDisabled();
+}
+
+function UpdateOsaeAdjBtns() {
+  // 抑え込み時間の訂正（±）は、まて中に一時停止した抑え込みがある場合のみ操作可能
+  ['red','white'].forEach(side => {
+    const st = TimerState[side];
+    const ok = !Running && !MatchFinished && !st.run && st.type === 'osae' && st.sec > 0;
+    ['OsaeAdjMinus','OsaeAdjPlus'].forEach(suffix => {
+      const pc = El(side + suffix);
+      const sp = El('Sp' + SpSide(side) + suffix);
+      if (pc) pc.disabled = !ok;
+      if (sp) sp.disabled = !ok;
+    });
+  });
 }
 
 function UpdateHajimeBtn() {
@@ -2870,10 +2933,26 @@ function HandleOsae(side) {
   if (MatchFinished) return;
   const state = TimerState[side];
   if (state.run && state.type === 'osae') {
+    // 実行中（通常時・規定時間終了後の抑え込み継続時）は、まて中でなくても常に解除できる
     StopTimer(side);
   } else {
+    // まて中は新規の抑え込み開始はできない（はじめを押してから）
+    if (!Running) return;
     StartCountTimer(side, 'osae');
   }
+}
+
+// まて中に一時停止している抑え込み時間を手動で訂正する（±1秒）
+function AdjustOsaeCorrection(side, delta) {
+  if (Running || MatchFinished) return;
+  const st = TimerState[side];
+  if (st.run || st.type !== 'osae' || st.sec <= 0) return;
+  st.sec = Math.max(0, st.sec + delta);
+  const clr = st.osaePhase === 'yuko' ? 'IsActiveYuko' : 'IsActiveOsae';
+  UpdateTimerDisplay(side, '抑え込み', st.sec + '秒', clr);
+  Sc[side]['O'] = st.sec;
+  UpdateScores();
+  UpdateOsaeAdjBtns();
 }
 
 /* ===== 抑え込み履歴（記録編集モーダルの一覧専用） ===== */
