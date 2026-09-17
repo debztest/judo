@@ -2946,6 +2946,10 @@ function CommitRecordSec() {
   const timePrefix = entry.text.split(' ')[0] || '';
   const text = (timePrefix ? timePrefix + ' ' : '') + OsaeTextFor(newTier, newSec);
 
+  // 抑込スコア欄（直近の抑え込み経過秒数の表示）も、訂正後の秒数に合わせる
+  Sc[side]['O'] = newSec;
+  UpdateScores();
+
   if (newTier === oldTier) {
     // 判定は変わらない場合はそのまま秒数とテキストだけ更新
     entry.sec  = newSec;
