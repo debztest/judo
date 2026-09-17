@@ -1713,9 +1713,10 @@ let Running = false;
 let TimerInterval = null;
 let IsGS = false;
 let GsElapsed = 0;
-// 規定時間が0になった時点で抑え込み中だった場合、GSには入らずタイマー0のまま
-// 抑え込みを継続し、一本または解除で試合を決するための状態フラグ
+// 規定時間が0になった時点で抑え込み中だった場合、GS（延長）タグは出さないが
+// タイマーは0から数え上げる。一本または解除で試合を決するための状態フラグと経過秒数
 let TimeExpiredHoldPending = false;
+let HoldOvertimeElapsed = 0;
 let MatchFinished = false;
 let WinnerSide = null;
 
@@ -2209,6 +2210,11 @@ function UpdateTimer() {
     const t = Fmt(GsElapsed);
     if (pc) { pc.textContent = t; pc.className = 'TimerVal IsGS' + (Running ? ' IsRunning' : ''); }
     if (sp) { sp.textContent = t; sp.className = 'SpTimer IsGS'  + (Running ? ' IsRunning' : ''); }
+  } else if (TimeExpiredHoldPending) {
+    // 規定時間終了後、抑え込み継続中は0秒から数え上げる
+    const t = Fmt(HoldOvertimeElapsed);
+    if (pc) { pc.textContent = t; pc.className = 'TimerVal'; }
+    if (sp) { sp.textContent = t; sp.className = 'SpTimer'; }
   } else {
     const t = Fmt(Remain);
     if (pc) { pc.textContent = t; pc.className = Running ? 'TimerVal IsRunning' : 'TimerVal'; }
@@ -2237,8 +2243,10 @@ function OnTimeUp() {
   const redOsae   = TimerState.red.run   && TimerState.red.type   === 'osae';
   const whiteOsae = TimerState.white.run && TimerState.white.type === 'osae';
   if (redOsae || whiteOsae) {
-    // タイマー表示は0のまま。一本になるか、抑え込みが解けた時点で試合終了とする
+    // タイマーは0から数え上げる。一本になるか、抑え込みが解けた時点で試合終了とする
     TimeExpiredHoldPending = true;
+    HoldOvertimeElapsed = 0;
+    UpdateTimer();
     // はじめは押さずに抑え込みカウントだけ継続（インターバルはStartCountTimerで動いている）
     return;
   }
@@ -2430,6 +2438,7 @@ function DoResetMatch() {
   IsGS = false;
   GsElapsed = 0;
   TimeExpiredHoldPending = false;
+  HoldOvertimeElapsed = 0;
   Remain = Cfg.matchMin * 60 + Cfg.matchSec;
   ClearAll();
   ['PcGsTag','SpGsTag','PcGsLive','SpGsLive'].forEach(id => { const e = El(id); if (e) e.style.display = 'none'; });
@@ -2469,6 +2478,7 @@ function ExecuteBack() {
   IsGS = false;
   GsElapsed = 0;
   TimeExpiredHoldPending = false;
+  HoldOvertimeElapsed = 0;
   ClearAll();
   MatchRecords = [];
   El('WinBanner').className = 'WinBanner';
@@ -2897,6 +2907,9 @@ function StartCountTimer(side, type) {
     const n     = TimerState[side].sec;
     const phase = TimerState[side].osaePhase;
     UpdateTimerDisplay(side, lbl, n + '秒', clr);
+    // 規定時間終了後に抑え込み継続でこの状態に入っている場合、メインのタイマー
+    // インターバルは止まっているのでここでタイマー表示を進める
+    if (TimeExpiredHoldPending) { HoldOvertimeElapsed++; UpdateTimer(); }
 
     if (type === 'osae') {
       // 抑込スコア欄は経過秒数をそのままリアルタイム表示する
