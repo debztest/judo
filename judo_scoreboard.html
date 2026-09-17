@@ -2672,7 +2672,6 @@ let RecordEditKey  = null;
 const RecordEditKeyLabel = { I: '一本', W: '技あり', Y: '有効', S: '指導', O: '抑え込み' };
 
 function OpenRecordEditList(side, key) {
-  if (Running) DoMate(); // 記録確認・修正中は自動でまて
   RecordEditSide = side;
   RecordEditKey  = key;
   const sideLabel = side === 'red' ? '赤' : '白';
