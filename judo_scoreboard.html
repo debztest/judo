@@ -222,6 +222,28 @@ body {
 .RecordEditChangeBtn--Y { background: #0F6E56; }
 .RecordEditChangeBtn--S { background: #633806; }
 .RecordEditChangeBtn--Cancel { background: #F5C518; color: #A32D2D; margin-top: 4px; }
+.RecordEditSecRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 10px 0;
+}
+.RecordEditSecBtn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: #185FA5;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+.RecordEditSecBtn:active { background: #0F4A82; }
+.RecordEditSecVal { font-size: 22px; font-weight: 700; color: #333; min-width: 56px; text-align: center; }
+.RecordEditSecHint { font-size: 12px; color: #777; text-align: center; margin-bottom: 8px; }
 
 /* ===== 設定画面 ===== */
 .SetupScreen { padding: 16px; }
@@ -524,23 +546,6 @@ body {
 .OsaeNum.IsYuko  { color: #0F6E56; }
 .OsaeNum.IsWaza  { color: #185FA5; }
 .OsaeNum.IsIppon { color: #A32D2D; }
-.OsaeAdjBtn {
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-  padding: 0;
-  border: none;
-  border-radius: 4px;
-  background: #5F5E5A;
-  color: #F1EFE8;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.OsaeAdjBtn:disabled { opacity: 0.3; cursor: not-allowed; }
 
 /* ランプバー（PC） */
 .LampBar {
@@ -906,23 +911,6 @@ body {
 .SpOsaeNum.IsYuko  { color: #0F6E56; }
 .SpOsaeNum.IsWaza  { color: #185FA5; }
 .SpOsaeNum.IsIppon { color: #A32D2D; }
-.SpOsaeAdjBtn {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  padding: 0;
-  border: none;
-  border-radius: 3px;
-  background: #5F5E5A;
-  color: #F1EFE8;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.SpOsaeAdjBtn:disabled { opacity: 0.3; cursor: not-allowed; }
 
 /* 記録ボックス（スマホ） */
 .SpLogBox {
@@ -1324,7 +1312,7 @@ body {
     <!-- 判定変更表示 -->
     <div id="RecordEditChangeView" style="display:none;">
       <div style="font-size:13px;color:#555;background:#f7f7f7;border-radius:8px;padding:8px 10px;margin-bottom:12px;" id="RecordEditChangeText"></div>
-      <div style="font-size:12px;color:#888;margin-bottom:8px;">変更後の判定を選択してください</div>
+      <div style="font-size:12px;color:#888;margin-bottom:8px;" id="RecordEditChangeHint">変更後の判定を選択してください</div>
       <div style="display:flex;flex-direction:column;gap:6px;" id="RecordEditChangeBtns"></div>
       <button class="AddRuleCancelBtn" style="width:100%;margin-top:10px;" onclick="RecordEditBackToList()">← 一覧に戻る</button>
     </div>
@@ -1549,8 +1537,6 @@ body {
           <div class="OsaeInner">
             <span class="OsaeLabel" id="redTimerLabel">--</span>
             <span class="OsaeNum"   id="redTimerVal">--</span>
-            <button class="OsaeAdjBtn" id="redOsaeAdjMinus" onclick="AdjustOsaeCorrection('red',-1)">−</button>
-            <button class="OsaeAdjBtn" id="redOsaeAdjPlus"  onclick="AdjustOsaeCorrection('red',1)">＋</button>
           </div>
         </div>
         <div class="LampBar" id="redLamp">赤ランプ</div>
@@ -1587,8 +1573,6 @@ body {
           <div class="OsaeInner">
             <span class="OsaeLabel" id="whiteTimerLabel">--</span>
             <span class="OsaeNum"   id="whiteTimerVal">--</span>
-            <button class="OsaeAdjBtn" id="whiteOsaeAdjMinus" onclick="AdjustOsaeCorrection('white',-1)">−</button>
-            <button class="OsaeAdjBtn" id="whiteOsaeAdjPlus"  onclick="AdjustOsaeCorrection('white',1)">＋</button>
           </div>
         </div>
         <div class="LampBar" id="whiteLamp">白ランプ</div>
@@ -1675,8 +1659,6 @@ body {
               <div class="SpOsaeInner">
                 <span class="SpOsaeLabel" id="SpRedTimerLabel">--</span>
                 <span class="SpOsaeNum"   id="SpRedTimerVal">--</span>
-                <button class="SpOsaeAdjBtn" id="SpRedOsaeAdjMinus" onclick="AdjustOsaeCorrection('red',-1)">−</button>
-                <button class="SpOsaeAdjBtn" id="SpRedOsaeAdjPlus"  onclick="AdjustOsaeCorrection('red',1)">＋</button>
               </div>
             </div>
             <div class="SpLogBox">
@@ -1712,8 +1694,6 @@ body {
               <div class="SpOsaeInner">
                 <span class="SpOsaeLabel" id="SpWhiteTimerLabel">--</span>
                 <span class="SpOsaeNum"   id="SpWhiteTimerVal">--</span>
-                <button class="SpOsaeAdjBtn" id="SpWhiteOsaeAdjMinus" onclick="AdjustOsaeCorrection('white',-1)">−</button>
-                <button class="SpOsaeAdjBtn" id="SpWhiteOsaeAdjPlus"  onclick="AdjustOsaeCorrection('white',1)">＋</button>
               </div>
             </div>
             <div class="SpLogBox">
@@ -2356,7 +2336,8 @@ function ShowExtensionEnd() {
 function DoMate() {
   clearInterval(TimerInterval);
   Running = false;
-  ['red', 'white'].forEach(s => { if (TimerState[s].run) PauseTimer(s); });
+  // まて＝抑え込みは解除（一時停止ではなく確定して記録する）
+  ['red', 'white'].forEach(s => { if (TimerState[s].run) StopTimer(s); });
   UpdateTimer();
   UpdateBtnPaused();
 }
@@ -2364,11 +2345,6 @@ function DoMate() {
 function DoSoremadeStop() {
   // それまで押下時：音を止めてから判定
   StopEndSound();
-}
-
-function PauseTimer(side) {
-  clearInterval(TimerState[side].int);
-  TimerState[side].run = false;
 }
 
 function SetSoremadeAsStopBtn() {
@@ -2564,34 +2540,19 @@ function UpdateBtnPaused() {
       if (pc) { if (!MatchFinished) pc.classList.remove('IsPaused'); else pc.classList.add('IsPaused'); }
       if (sp) { if (!MatchFinished) sp.classList.remove('IsPaused'); else sp.classList.add('IsPaused'); }
     });
-    // 抑え込みは、実行中（解除は常に可能）かRunning中（新規開始可能）でなければ押せない
-    const osaeOk = Running || TimerState[side].run;
+    // 抑え込みは、Running中（新規開始・進行中の解除）でなければ押せない
+    // （まて中は自動解除されるため、押せる状態＝実行中と一致する）
     const pcO = El(side + 'BtnO');
     const spO = El('Sp' + SpSide(side) + 'BtnO');
-    if (pcO) { if (osaeOk && !MatchFinished) pcO.classList.remove('IsPaused'); else pcO.classList.add('IsPaused'); }
-    if (spO) { if (osaeOk && !MatchFinished) spO.classList.remove('IsPaused'); else spO.classList.add('IsPaused'); }
+    if (pcO) { if (Running && !MatchFinished) pcO.classList.remove('IsPaused'); else pcO.classList.add('IsPaused'); }
+    if (spO) { if (Running && !MatchFinished) spO.classList.remove('IsPaused'); else spO.classList.add('IsPaused'); }
   });
   // それまでボタンは IsPaused を当てない（IsDisabled で制御）
   ['PcSoremadeBtn','SpSoremadeBtn'].forEach(id => {
     const b = El(id); if (b) b.classList.remove('IsPaused');
   });
-  UpdateOsaeAdjBtns();
   UpdateCtrlBtns();
   UpdateGearMenuDisabled();
-}
-
-function UpdateOsaeAdjBtns() {
-  // 抑え込み時間の訂正（±）は、まて中に一時停止した抑え込みがある場合のみ操作可能
-  ['red','white'].forEach(side => {
-    const st = TimerState[side];
-    const ok = !Running && !MatchFinished && !st.run && st.type === 'osae' && st.sec > 0;
-    ['OsaeAdjMinus','OsaeAdjPlus'].forEach(suffix => {
-      const pc = El(side + suffix);
-      const sp = El('Sp' + SpSide(side) + suffix);
-      if (pc) pc.disabled = !ok;
-      if (sp) sp.disabled = !ok;
-    });
-  });
 }
 
 function UpdateHajimeBtn() {
@@ -2669,6 +2630,19 @@ function AddLog(side, text, key = null, gray = false, linkedSide = null, linkedK
   return id;
 }
 
+// 直前にAddLogした記録に、抑え込みの経過秒数を付与する（秒数の訂正機能で使う）
+function TagLogSec(side, sec) {
+  if (Logs[side][0]) Logs[side][0].sec = sec;
+}
+
+// 抑え込みの経過秒数から、どの判定に相当するかを返す（該当なしはnull）
+function OsaeTierForSec(sec) {
+  if (sec >= 20) return 'I';
+  if (sec >= Cfg.wazaSec) return 'W';
+  if (sec >= Cfg.yukoSec) return 'Y';
+  return null;
+}
+
 function RenderLog(side) {
   const ss = SpSide(side);
   const containers = [
@@ -2734,7 +2708,17 @@ function DeleteLog(side, id, key) {
 /* ===== 記録編集（スコア欄タップで一覧→判定変更） ===== */
 let RecordEditSide = null;
 let RecordEditKey  = null;
+// 現在「判定変更」画面で編集中のエントリ本体と、その現在の所属（OsaeHistoryかLogsか）。
+// 秒数訂正で階級が変わるとエントリが配列間を移動するため、常にこれを正として扱う
+let RecordEditChangeEntry = null;
+let RecordEditChangeInOsaeHistory = false;
 const RecordEditKeyLabel = { I: '一本', W: '技あり', Y: '有効', S: '指導', O: '抑え込み' };
+
+function OsaeTextFor(tier, sec) {
+  const labels = { I: '一本', W: '技あり', Y: '有効' };
+  if (tier) return labels[tier] + '（抑え込み' + sec + '秒）';
+  return '抑え込み（' + sec + '秒）';
+}
 
 function OpenRecordEditList(side, key) {
   RecordEditSide = side;
@@ -2775,27 +2759,124 @@ function OpenRecordEditChange(id) {
     ? OsaeHistory[RecordEditSide].find(e => e.id === id)
     : Logs[RecordEditSide].find(e => e.id === id);
   if (!entry) return;
+  RecordEditChangeEntry = entry;
+  RecordEditChangeInOsaeHistory = isOsae;
+
   El('RecordEditChangeText').textContent = entry.text;
   const wrap = El('RecordEditChangeBtns');
   wrap.innerHTML = '';
-  // 抑え込みの履歴は判定種別への振替対象外（取り消しのみ）
-  if (!isOsae) {
+  // 抑え込み由来（secを持つ）の記録は秒数を直接訂正でき、判定は秒数から自動的に決まる。
+  // ただし抑え込み履歴（isOsae）はまて解除のたびに必ず記録される全件ログなので、
+  // 既に昇格済み（Logs側に判定記録がある）のものは対象外とし、取り消しのみ許可する
+  // （そうしないと同じ抑え込みの判定が二重に加算されてしまう）
+  const osaeEditable = typeof entry.sec === 'number' && (!isOsae || OsaeTierForSec(entry.sec) === null);
+  if (osaeEditable) {
+    El('RecordEditChangeHint').textContent = '抑え込み時間を変更してください';
+    RenderOsaeSecEditor();
+  } else if (!isOsae) {
+    El('RecordEditChangeHint').textContent = '変更後の判定を選択してください';
     ['I', 'W', 'Y', 'S'].forEach(k => {
       const btn = document.createElement('button');
       btn.className = 'RecordEditChangeBtn RecordEditChangeBtn--' + k;
       btn.textContent = RecordEditKeyLabel[k] + (k === entry.key ? '（現在）' : 'に変更');
-      btn.onclick = () => ApplyRecordEdit(id, k);
+      btn.onclick = () => ApplyRecordEdit(k);
       wrap.appendChild(btn);
     });
+    AppendCancelBtn(wrap);
+  } else {
+    El('RecordEditChangeHint').textContent = '';
+    AppendCancelBtn(wrap);
   }
-  const cancelBtn = document.createElement('button');
-  cancelBtn.className = 'RecordEditChangeBtn RecordEditChangeBtn--Cancel';
-  cancelBtn.textContent = '取り消し';
-  cancelBtn.onclick = () => CancelRecordEdit(id);
-  wrap.appendChild(cancelBtn);
 
   El('RecordEditListView').style.display   = 'none';
   El('RecordEditChangeView').style.display = 'block';
+}
+
+function AppendCancelBtn(wrap) {
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'RecordEditChangeBtn RecordEditChangeBtn--Cancel';
+  cancelBtn.textContent = '取り消し';
+  cancelBtn.onclick = () => CancelRecordEdit();
+  wrap.appendChild(cancelBtn);
+}
+
+function RenderOsaeSecEditor() {
+  const entry = RecordEditChangeEntry;
+  const wrap  = El('RecordEditChangeBtns');
+  wrap.innerHTML = '';
+  El('RecordEditChangeText').textContent = entry.text;
+
+  const row = document.createElement('div');
+  row.className = 'RecordEditSecRow';
+  const minus = document.createElement('button');
+  minus.className = 'RecordEditSecBtn';
+  minus.textContent = '−';
+  minus.onclick = () => AdjustRecordSec(-1);
+  const val = document.createElement('span');
+  val.className = 'RecordEditSecVal';
+  val.textContent = entry.sec + '秒';
+  const plus = document.createElement('button');
+  plus.className = 'RecordEditSecBtn';
+  plus.textContent = '＋';
+  plus.onclick = () => AdjustRecordSec(1);
+  row.append(minus, val, plus);
+  wrap.appendChild(row);
+
+  const hint = document.createElement('div');
+  hint.className = 'RecordEditSecHint';
+  const tier = RecordEditChangeInOsaeHistory ? null : entry.key;
+  hint.textContent = '現在の判定：' + (tier ? RecordEditKeyLabel[tier] : 'なし（抑え込みのみ）');
+  wrap.appendChild(hint);
+
+  AppendCancelBtn(wrap);
+}
+
+function AdjustRecordSec(delta) {
+  const entry = RecordEditChangeEntry;
+  const side  = RecordEditSide;
+  if (!entry) return;
+  const oldTier = RecordEditChangeInOsaeHistory ? null : entry.key;
+  const newSec  = Math.max(0, entry.sec + delta);
+  const newTier = OsaeTierForSec(newSec);
+  const timePrefix = entry.text.split(' ')[0] || '';
+  const text = (timePrefix ? timePrefix + ' ' : '') + OsaeTextFor(newTier, newSec);
+
+  if (newTier === oldTier) {
+    // 判定は変わらない場合はそのまま秒数とテキストだけ更新
+    entry.sec  = newSec;
+    entry.text = text;
+    if (!RecordEditChangeInOsaeHistory) RenderLog(side);
+  } else {
+    // 判定が変わる場合は一旦取り消してから、新しい判定として登録し直す
+    if (oldTier && Sc[side][oldTier] > 0) { Sc[side][oldTier]--; UpdateScores(); }
+    if (RecordEditChangeInOsaeHistory) {
+      OsaeHistory[side] = OsaeHistory[side].filter(e => e.id !== entry.id);
+    } else {
+      Logs[side] = Logs[side].filter(e => e.id !== entry.id);
+    }
+    if (newTier === null) {
+      const newEntry = { id: OsaeHistIdCounter++, text, sec: newSec };
+      OsaeHistory[side].unshift(newEntry);
+      RecordEditChangeEntry = newEntry;
+      RecordEditChangeInOsaeHistory = true;
+      RenderLog(side);
+    } else {
+      Sc[side][newTier] = (Sc[side][newTier] || 0) + 1;
+      UpdateScores();
+      const newId = AddLog(side, text, newTier);
+      const newEntry = Logs[side].find(e => e.id === newId);
+      newEntry.sec = newSec;
+      RecordEditChangeEntry = newEntry;
+      RecordEditChangeInOsaeHistory = false;
+      if (!CheckScoreCascade(side, newTier, newEntry)) {
+        CheckWinCondition();
+        UpdateHajimeBtn();
+        if (!MatchFinished && WinnerSide) { UpdateLamps(WinnerSide, false); WinnerSide = null; }
+      }
+    }
+  }
+  RenderRecordEditList();
+  RenderOsaeSecEditor();
 }
 
 function RecordEditBackToList() {
@@ -2804,9 +2885,9 @@ function RecordEditBackToList() {
   El('RecordEditChangeView').style.display = 'none';
 }
 
-function ApplyRecordEdit(id, newKey) {
+function ApplyRecordEdit(newKey) {
   const side  = RecordEditSide;
-  const entry = Logs[side].find(e => e.id === id);
+  const entry = RecordEditChangeEntry;
   if (!entry) { CloseRecordEditModal(); return; }
   const oldKey      = entry.key;
   const oldCategory = entry.category;
@@ -2832,16 +2913,17 @@ function ApplyRecordEdit(id, newKey) {
   }
 }
 
-function CancelRecordEdit(id) {
-  const side = RecordEditSide;
-  if (RecordEditKey === 'O') {
+function CancelRecordEdit() {
+  const side  = RecordEditSide;
+  const entry = RecordEditChangeEntry;
+  if (!entry) { CloseRecordEditModal(); return; }
+  if (RecordEditChangeInOsaeHistory) {
     // 抑え込み履歴の取り消しはこのモーダル専用の記録を消すだけ（スコアへの影響なし）
-    OsaeHistory[side] = OsaeHistory[side].filter(e => e.id !== id);
+    OsaeHistory[side] = OsaeHistory[side].filter(e => e.id !== entry.id);
     CloseRecordEditModal();
     return;
   }
-  const entry = Logs[side].find(e => e.id === id);
-  DeleteLog(side, id, entry ? entry.key : null);
+  DeleteLog(side, entry.id, entry.key);
   CloseRecordEditModal();
 }
 
@@ -2849,6 +2931,8 @@ function CloseRecordEditModal() {
   El('RecordEditModal').classList.remove('IsOpen');
   RecordEditSide = null;
   RecordEditKey  = null;
+  RecordEditChangeEntry = null;
+  RecordEditChangeInOsaeHistory = false;
 }
 
 /* ===== 勝敗 ===== */
@@ -2942,19 +3026,6 @@ function HandleOsae(side) {
   }
 }
 
-// まて中に一時停止している抑え込み時間を手動で訂正する（±1秒）
-function AdjustOsaeCorrection(side, delta) {
-  if (Running || MatchFinished) return;
-  const st = TimerState[side];
-  if (st.run || st.type !== 'osae' || st.sec <= 0) return;
-  st.sec = Math.max(0, st.sec + delta);
-  const clr = st.osaePhase === 'yuko' ? 'IsActiveYuko' : 'IsActiveOsae';
-  UpdateTimerDisplay(side, '抑え込み', st.sec + '秒', clr);
-  Sc[side]['O'] = st.sec;
-  UpdateScores();
-  UpdateOsaeAdjBtns();
-}
-
 /* ===== 抑え込み履歴（記録編集モーダルの一覧専用） ===== */
 function RecordOsaeHistory(side, sec) {
   if (sec <= 0) return;
@@ -3003,6 +3074,7 @@ function StartCountTimer(side, type) {
         Sc[side]['Y']++;
         UpdateScores();
         AddLog(side, (IsGS ? '延長戦' : Fmt(Remain)) + ' 有効（抑え込み' + n + '秒）', 'Y');
+        TagLogSec(side, n);
         UpdateTimerDisplay(side, '抑え込み', n + '秒', 'IsActiveYuko');
         if (IsGS) {
           clearInterval(TimerState[side].int); TimerState[side].run = false;
@@ -3023,6 +3095,7 @@ function StartCountTimer(side, type) {
         Sc[side]['W']++;
         UpdateScores();
         AddLog(side, (IsGS ? '延長戦' : Fmt(Remain)) + ' 技あり（抑え込み' + n + '秒）', 'W');
+        TagLogSec(side, n);
         UpdateTimerDisplay(side, '抑え込み', n + '秒', 'IsActiveOsae');
         RenderLog(side);
         if (Sc[side]['W'] >= 2) {
@@ -3044,6 +3117,7 @@ function StartCountTimer(side, type) {
         if (wL) Logs[side] = Logs[side].filter(e => e.id !== wL.id);
         Sc[side]['I']++; UpdateScores();
         AddLog(side, (IsGS ? '延長戦' : Fmt(Remain)) + ' 一本（抑え込み' + n + '秒）', 'I');
+        TagLogSec(side, n);
         RenderLog(side);
         clearInterval(TimerState[side].int); TimerState[side].run = false;
         UpdateTimerDisplay(side, '--', '--', ''); SetOsaeDisabled(side, false);
