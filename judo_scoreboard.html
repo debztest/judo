@@ -2766,9 +2766,9 @@ function OpenRecordEditChange(id) {
   const wrap = El('RecordEditChangeBtns');
   wrap.innerHTML = '';
   // 抑え込み由来（secを持つ）の記録は秒数を直接訂正でき、判定は秒数から自動的に決まる。
-  // ただし抑え込み履歴（isOsae）はまて解除のたびに必ず記録される全件ログなので、
-  // 既に昇格済み（Logs側に判定記録がある）のものは対象外とし、取り消しのみ許可する
-  // （そうしないと同じ抑え込みの判定が二重に加算されてしまう）
+  // 抑え込み履歴（isOsae）には昇格しなかった（有効未満の）記録しか残らない設計だが、
+  // 念のため既に昇格済み相当の秒数のものは対象外とし、取り消しのみ許可する
+  // （同じ抑え込みの判定が二重に加算されるのを防ぐため）
   const osaeEditable = typeof entry.sec === 'number' && (!isOsae || OsaeTierForSec(entry.sec) === null);
   if (osaeEditable) {
     El('RecordEditChangeHint').textContent = '抑え込み時間を変更してください';
@@ -3081,7 +3081,7 @@ function StartCountTimer(side, type) {
           UpdateTimerDisplay(side, '--', '--', ''); SetOsaeDisabled(side, false);
           El(side + 'BtnO')?.classList.remove('IsCountingOsae');
           El(spOKey)?.classList.remove('IsCountingOsae');
-          RecordOsaeHistory(side, n);
+          // 既にY判定としてLogsに記録済みのため、抑え込み履歴への二重記録はしない
           TimerState[side] = { run:false, sec:0, int:null, type:'', osaePhase:'' };
           DeclareWin(side, '有効・それまで（GS抑え込み' + n + '秒）'); return;
         }
@@ -3105,7 +3105,7 @@ function StartCountTimer(side, type) {
           UpdateTimerDisplay(side, '--', '--', ''); SetOsaeDisabled(side, false);
           El(side + 'BtnO')?.classList.remove('IsCountingOsae');
           El(spOKey)?.classList.remove('IsCountingOsae');
-          RecordOsaeHistory(side, n);
+          // 既にI判定としてLogsに記録済みのため、抑え込み履歴への二重記録はしない
           TimerState[side] = { run:false, sec:0, int:null, type:'', osaePhase:'' };
           DeclareWin(side, '合わせ技一本'); return;
         }
@@ -3123,7 +3123,7 @@ function StartCountTimer(side, type) {
         UpdateTimerDisplay(side, '--', '--', ''); SetOsaeDisabled(side, false);
         El(side + 'BtnO')?.classList.remove('IsCountingOsae');
         El(spOKey)?.classList.remove('IsCountingOsae');
-        RecordOsaeHistory(side, n);
+        // 既にI判定としてLogsに記録済みのため、抑え込み履歴への二重記録はしない
         TimerState[side] = { run:false, sec:0, int:null, type:'', osaePhase:'' };
         DeclareWin(side, '抑え込み一本（' + n + '秒）'); return;
       }
@@ -3132,8 +3132,9 @@ function StartCountTimer(side, type) {
 }
 
 function StopTimer(side) {
-  const sec = TimerState[side].sec;
-  const type = TimerState[side].type;
+  const sec   = TimerState[side].sec;
+  const type  = TimerState[side].type;
+  const phase = TimerState[side].osaePhase;
 
   // 規定時間終了後、抑え込みが解けた時点で判定（技あり優勢→有効優勢→指導数優勢、
   // それでも決着しなければGSへ。タイマーは0のままだったので延長終了表示は不要）
@@ -3143,7 +3144,9 @@ function StopTimer(side) {
     UpdateTimerDisplay(side, '--', '--', '');
     El(side + 'BtnO')?.classList.remove('IsCountingOsae');
     El('Sp' + SpSide(side) + 'BtnO')?.classList.remove('IsCountingOsae');
-    RecordOsaeHistory(side, sec);
+    // 既に判定へ昇格済み（phaseがyuko/waza）ならLogs側に記録済みなので、
+    // 抑え込み履歴への二重記録を避けるため未昇格の場合のみ記録する
+    if (phase === '') RecordOsaeHistory(side, sec);
     TimerState[side] = { run: false, sec: 0, int: null, type: '', osaePhase: '' };
     SetOsaeDisabled(side, false);
     TimeExpiredHoldPending = false;
@@ -3163,7 +3166,9 @@ function StopTimer(side) {
   TimerState[side].run = false;
   El(side + 'BtnO')?.classList.remove('IsCountingOsae');
   El('Sp' + SpSide(side) + 'BtnO')?.classList.remove('IsCountingOsae');
-  RecordOsaeHistory(side, sec);
+  // 既に判定へ昇格済み（phaseがyuko/waza）ならLogs側に記録済みなので、
+  // 抑え込み履歴への二重記録を避けるため未昇格の場合のみ記録する
+  if (phase === '') RecordOsaeHistory(side, sec);
   UpdateTimerDisplay(side, '--', '--', '');
   TimerState[side] = { run: false, sec: 0, int: null, type: '', osaePhase: '' };
   SetOsaeDisabled(side, false);
