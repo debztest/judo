@@ -221,6 +221,7 @@ body {
 .RecordEditChangeBtn--W { background: #185FA5; }
 .RecordEditChangeBtn--Y { background: #0F6E56; }
 .RecordEditChangeBtn--S { background: #633806; }
+.RecordEditChangeBtn--Ok { background: #0F6E56; margin-top: 4px; }
 .RecordEditChangeBtn--Cancel { background: #F5C518; color: #A32D2D; margin-top: 4px; }
 .RecordEditSecRow {
   display: flex;
@@ -422,6 +423,10 @@ body {
   font-size: 11px;
   cursor: pointer;
 }
+.TimerMain {
+  display: inline-flex;
+  align-items: baseline;
+}
 .TimerVal {
   font-size: 48px;
   font-weight: 600;
@@ -431,6 +436,14 @@ body {
 }
 .TimerVal.IsRunning { color: #185FA5; }
 .TimerVal.IsGS { color: #A32D2D; }
+.TimerMs {
+  font-size: 18px;
+  font-weight: 600;
+  color: #888;
+  margin-left: 1px;
+}
+.TimerMs.IsRunning { color: #185FA5; }
+.TimerMs.IsGS { color: #A32D2D; }
 .GsTag {
   background: #A32D2D;
   color: #fff;
@@ -655,6 +668,10 @@ body {
   align-items: center;
   gap: 5px;
 }
+.SpTimerMain {
+  display: inline-flex;
+  align-items: baseline;
+}
 .SpTimer {
   font-size: 36px;
   font-weight: 700;
@@ -664,6 +681,16 @@ body {
 }
 .SpTimer.IsRunning { color: #185FA5; }
 .SpTimer.IsGS { color: #A32D2D; }
+.SpTimerMs {
+  font-size: 14px;
+  font-weight: 600;
+  color: #888;
+  line-height: 1;
+  white-space: nowrap;
+  margin-left: 1px;
+}
+.SpTimerMs.IsRunning { color: #185FA5; }
+.SpTimerMs.IsGS { color: #A32D2D; }
 .SpGsTag {
   background: #A32D2D;
   color: #fff;
@@ -1501,7 +1528,7 @@ body {
 
     <!-- タイマーバー -->
     <div class="PcTimerBar">
-      <span class="TimerVal" id="PcTimerVal">4:00</span>
+      <span class="TimerMain"><span class="TimerVal" id="PcTimerVal">4:00</span><span class="TimerMs" id="PcTimerMs">.00</span></span>
       <span class="GsTag"    id="PcGsTag">延長</span>
       <span class="GsLive"   id="PcGsLive" style="display:none">中</span>
       <button class="PcRuleBtn" onclick="OpenRule()">📋 ルール</button>
@@ -1606,7 +1633,7 @@ body {
     <div class="SpTopBar">
       <!-- タイマー（中央） -->
       <div class="SpTimerBlock">
-        <span class="SpTimer" id="SpTimerVal">4:00</span>
+        <span class="SpTimerMain"><span class="SpTimer" id="SpTimerVal">4:00</span><span class="SpTimerMs" id="SpTimerMs">.00</span></span>
         <span class="SpGsTag" id="SpGsTag">延長</span>
         <span class="SpGsLive" id="SpGsLive" style="display:none">中</span>
       </div>
@@ -1733,10 +1760,13 @@ let CustomRules = [];
 
 /* ===== 試合状態 ===== */
 let Remain = 240;
+let RemainMs = 0;   // Remainの端数（ミリ秒）。表示専用で、勝敗判定等はRemain（整数秒）のみを見る
 let Running = false;
 let TimerInterval = null;
+let TimerLastTick = 0; // performance.now()。ミリ秒表示をズレなく進めるための基準時刻
 let IsGS = false;
 let GsElapsed = 0;
+let GsMs = 0;        // GsElapsedの端数（ミリ秒）。表示専用
 // 規定時間が0になった時点で抑え込み中だった場合、GS（延長）タグは出さないが
 // タイマーは0から数え上げる。一本または解除で試合を決するための状態フラグと経過秒数
 let TimeExpiredHoldPending = false;
@@ -2211,6 +2241,7 @@ function Adj(key, delta) {
 /* ===== 試合開始 ===== */
 function GoMatch() {
   Remain = Cfg.matchMin * 60 + Cfg.matchSec;
+  RemainMs = 0;
   IsGS = false;
   MatchFinished = false;
   WinnerSide = null;
@@ -2228,38 +2259,70 @@ function GoMatch() {
 }
 
 /* ===== タイマー ===== */
+// ミリ秒(0-999)を2桁の百分の一秒表記（00〜99）に変換
+function FmtCs(ms) {
+  return String(Math.floor(ms / 10)).padStart(2, '0');
+}
+
 function UpdateTimer() {
-  const pc = El('PcTimerVal');
-  const sp = El('SpTimerVal');
+  const pc   = El('PcTimerVal');
+  const sp   = El('SpTimerVal');
+  const pcMs = El('PcTimerMs');
+  const spMs = El('SpTimerMs');
   if (IsGS) {
     // GS中は0秒から経過時間を数え上げる
     const t = Fmt(GsElapsed);
-    if (pc) { pc.textContent = t; pc.className = 'TimerVal IsGS' + (Running ? ' IsRunning' : ''); }
-    if (sp) { sp.textContent = t; sp.className = 'SpTimer IsGS'  + (Running ? ' IsRunning' : ''); }
+    const cls = 'IsGS' + (Running ? ' IsRunning' : '');
+    if (pc)   { pc.textContent = t; pc.className = 'TimerVal ' + cls; }
+    if (sp)   { sp.textContent = t; sp.className = 'SpTimer ' + cls; }
+    if (pcMs) { pcMs.textContent = '.' + FmtCs(GsMs); pcMs.className = 'TimerMs ' + cls; pcMs.style.display = ''; }
+    if (spMs) { spMs.textContent = '.' + FmtCs(GsMs); spMs.className = 'SpTimerMs ' + cls; spMs.style.display = ''; }
   } else if (TimeExpiredHoldPending) {
     // 規定時間終了後、抑え込み継続中は0秒から数え上げる（表示はGS中と同じ赤字）
+    // このモードは1秒単位でしか進まないため、ミリ秒欄は表示しない
     const t = Fmt(HoldOvertimeElapsed);
-    if (pc) { pc.textContent = t; pc.className = 'TimerVal IsGS'; }
-    if (sp) { sp.textContent = t; sp.className = 'SpTimer IsGS'; }
+    if (pc)   { pc.textContent = t; pc.className = 'TimerVal IsGS'; }
+    if (sp)   { sp.textContent = t; sp.className = 'SpTimer IsGS'; }
+    if (pcMs) { pcMs.style.display = 'none'; }
+    if (spMs) { spMs.style.display = 'none'; }
   } else {
     const t = Fmt(Remain);
-    if (pc) { pc.textContent = t; pc.className = Running ? 'TimerVal IsRunning' : 'TimerVal'; }
-    if (sp) { sp.textContent = t; sp.className = Running ? 'SpTimer IsRunning'  : 'SpTimer';  }
+    const cls = Running ? 'IsRunning' : '';
+    if (pc)   { pc.textContent = t; pc.className = 'TimerVal ' + cls; }
+    if (sp)   { sp.textContent = t; sp.className = 'SpTimer ' + cls; }
+    if (pcMs) { pcMs.textContent = '.' + FmtCs(RemainMs); pcMs.className = 'TimerMs ' + cls; pcMs.style.display = ''; }
+    if (spMs) { spMs.textContent = '.' + FmtCs(RemainMs); spMs.className = 'SpTimerMs ' + cls; spMs.style.display = ''; }
   }
 }
 
 function DoHajime() {
   if (Running || MatchFinished) return;
   Running = true;
+  TimerLastTick = performance.now();
   TimerInterval = setInterval(() => {
+    const now = performance.now();
+    const deltaMs = now - TimerLastTick;
+    TimerLastTick = now;
     if (IsGS) {
-      GsElapsed++;
+      GsMs += deltaMs;
+      while (GsMs >= 1000) { GsMs -= 1000; GsElapsed++; }
     } else {
-      if (Remain > 0) { Remain--; }
-      else { clearInterval(TimerInterval); Running = false; OnTimeUp(); UpdateBtnPaused(); }
+      RemainMs -= deltaMs;
+      while (RemainMs < 0) {
+        if (Remain > 0) { Remain--; RemainMs += 1000; }
+        else {
+          RemainMs = 0;
+          clearInterval(TimerInterval);
+          Running = false;
+          UpdateTimer();
+          OnTimeUp();
+          UpdateBtnPaused();
+          return;
+        }
+      }
     }
     UpdateTimer();
-  }, 1000);
+  }, 33);
   UpdateTimer();
   UpdateBtnPaused();
 }
@@ -2304,6 +2367,7 @@ function ToggleGS() {
     DoMate(); // まず止める
     IsGS = true;
     GsElapsed = 0;
+    GsMs = 0;
     ['PcGsTag', 'SpGsTag'].forEach(id => { const e = El(id); if (e) e.style.display = 'inline-block'; });
     ['PcGsLive', 'SpGsLive'].forEach(id => { const e = El(id); if (e) e.style.display = 'inline-block'; });
     UpdateTimer();
@@ -2318,6 +2382,7 @@ function ToggleGS() {
 function StartGS() {
   IsGS = true;
   GsElapsed = 0;
+  GsMs = 0;
   ['PcGsTag', 'SpGsTag'].forEach(id => { const e = El(id); if (e) e.style.display = 'inline-block'; });
   ['PcGsLive', 'SpGsLive'].forEach(id => { const e = El(id); if (e) e.style.display = 'inline-block'; });
   UpdateTimer();
@@ -2331,8 +2396,11 @@ function StartGS() {
 function ShowExtensionEnd() {
   // 延長終了：タイマー表示を「延長終了」に変更
   const pc = El('PcTimerVal'); const sp = El('SpTimerVal');
+  const pcMs = El('PcTimerMs'); const spMs = El('SpTimerMs');
   if (pc) { pc.textContent = '延長終了'; pc.className = 'TimerVal'; }
   if (sp) { sp.textContent = '延長終了'; sp.className = 'SpTimer'; }
+  if (pcMs) pcMs.style.display = 'none';
+  if (spMs) spMs.style.display = 'none';
 }
 
 function DoMate() {
@@ -2461,9 +2529,11 @@ function DoResetMatch() {
   MatchFinished = false;
   IsGS = false;
   GsElapsed = 0;
+  GsMs = 0;
   TimeExpiredHoldPending = false;
   HoldOvertimeElapsed = 0;
   Remain = Cfg.matchMin * 60 + Cfg.matchSec;
+  RemainMs = 0;
   ClearAll();
   ['PcGsTag','SpGsTag','PcGsLive','SpGsLive'].forEach(id => { const e = El(id); if (e) e.style.display = 'none'; });
   const gsBtn = El('SpGsMenuBtn'); if (gsBtn) gsBtn.textContent = '⚡ GS開始';
@@ -2501,6 +2571,7 @@ function ExecuteBack() {
   MatchFinished = false;
   IsGS = false;
   GsElapsed = 0;
+  GsMs = 0;
   TimeExpiredHoldPending = false;
   HoldOvertimeElapsed = 0;
   ClearAll();
@@ -2714,6 +2785,8 @@ let RecordEditKey  = null;
 // 秒数訂正で階級が変わるとエントリが配列間を移動するため、常にこれを正として扱う
 let RecordEditChangeEntry = null;
 let RecordEditChangeInOsaeHistory = false;
+// 抑え込み秒数の編集中の値。決定を押すまでは表示上の仮の値で、実データには反映しない
+let RecordEditPendingSec = 0;
 const RecordEditKeyLabel = { I: '一本', W: '技あり', Y: '有効', S: '指導', O: '抑え込み' };
 
 function OsaeTextFor(tier, sec) {
@@ -2784,6 +2857,7 @@ function OpenRecordEditChange(id) {
   const osaeEditable = typeof entry.sec === 'number' && (!isOsae || OsaeTierForSec(entry.sec) === null);
   if (osaeEditable) {
     El('RecordEditChangeHint').textContent = '抑え込み時間を変更してください';
+    RecordEditPendingSec = entry.sec;
     RenderOsaeSecEditor();
   } else if (!isOsae) {
     El('RecordEditChangeHint').textContent = '変更後の判定を選択してください';
@@ -2826,7 +2900,7 @@ function RenderOsaeSecEditor() {
   minus.onclick = () => AdjustRecordSec(-1);
   const val = document.createElement('span');
   val.className = 'RecordEditSecVal';
-  val.textContent = entry.sec + '秒';
+  val.textContent = RecordEditPendingSec + '秒';
   const plus = document.createElement('button');
   plus.className = 'RecordEditSecBtn';
   plus.textContent = '＋';
@@ -2836,19 +2910,38 @@ function RenderOsaeSecEditor() {
 
   const hint = document.createElement('div');
   hint.className = 'RecordEditSecHint';
-  const tier = RecordEditChangeInOsaeHistory ? null : entry.key;
-  hint.textContent = '現在の判定：' + (tier ? RecordEditKeyLabel[tier] : 'なし（抑え込みのみ）');
+  const currentTier = RecordEditChangeInOsaeHistory ? null : entry.key;
+  const pendingTier = OsaeTierForSec(RecordEditPendingSec);
+  if (pendingTier === currentTier) {
+    hint.textContent = '現在の判定：' + (currentTier ? RecordEditKeyLabel[currentTier] : 'なし（抑え込みのみ）');
+  } else {
+    hint.textContent = '判定：' + (currentTier ? RecordEditKeyLabel[currentTier] : 'なし') +
+      ' → ' + (pendingTier ? RecordEditKeyLabel[pendingTier] : 'なし') + '（決定で変更されます）';
+  }
   wrap.appendChild(hint);
+
+  const okBtn = document.createElement('button');
+  okBtn.className = 'RecordEditChangeBtn RecordEditChangeBtn--Ok';
+  okBtn.textContent = '決定';
+  okBtn.onclick = () => CommitRecordSec();
+  wrap.appendChild(okBtn);
 
   AppendCancelBtn(wrap);
 }
 
+// +/-では仮の秒数（RecordEditPendingSec）と表示だけを更新し、実データには触れない
 function AdjustRecordSec(delta) {
+  RecordEditPendingSec = Math.max(0, RecordEditPendingSec + delta);
+  RenderOsaeSecEditor();
+}
+
+// 決定が押されて初めて、仮の秒数を実際のスコア・記録に反映する
+function CommitRecordSec() {
   const entry = RecordEditChangeEntry;
   const side  = RecordEditSide;
   if (!entry) return;
   const oldTier = RecordEditChangeInOsaeHistory ? null : entry.key;
-  const newSec  = Math.max(0, entry.sec + delta);
+  const newSec  = RecordEditPendingSec;
   const newTier = OsaeTierForSec(newSec);
   const timePrefix = entry.text.split(' ')[0] || '';
   const text = (timePrefix ? timePrefix + ' ' : '') + OsaeTextFor(newTier, newSec);
@@ -2858,38 +2951,36 @@ function AdjustRecordSec(delta) {
     entry.sec  = newSec;
     entry.text = text;
     if (!RecordEditChangeInOsaeHistory) RenderLog(side);
+    RenderRecordEditList();
+    CloseRecordEditModal();
+    return;
+  }
+  // 判定が変わる場合は一旦取り消してから、新しい判定として登録し直す
+  if (oldTier && Sc[side][oldTier] > 0) { Sc[side][oldTier]--; UpdateScores(); }
+  if (RecordEditChangeInOsaeHistory) {
+    OsaeHistory[side] = OsaeHistory[side].filter(e => e.id !== entry.id);
   } else {
-    // 判定が変わる場合は一旦取り消してから、新しい判定として登録し直す
-    if (oldTier && Sc[side][oldTier] > 0) { Sc[side][oldTier]--; UpdateScores(); }
-    if (RecordEditChangeInOsaeHistory) {
-      OsaeHistory[side] = OsaeHistory[side].filter(e => e.id !== entry.id);
-    } else {
-      Logs[side] = Logs[side].filter(e => e.id !== entry.id);
-    }
-    if (newTier === null) {
-      const newEntry = { id: LogIdCounter++, text, sec: newSec, osaeSeq: OsaeSeq++ };
-      OsaeHistory[side].unshift(newEntry);
-      RecordEditChangeEntry = newEntry;
-      RecordEditChangeInOsaeHistory = true;
-      RenderLog(side);
-    } else {
-      Sc[side][newTier] = (Sc[side][newTier] || 0) + 1;
-      UpdateScores();
-      const newId = AddLog(side, text, newTier);
-      const newEntry = Logs[side].find(e => e.id === newId);
-      newEntry.sec = newSec;
-      newEntry.osaeSeq = OsaeSeq++;
-      RecordEditChangeEntry = newEntry;
-      RecordEditChangeInOsaeHistory = false;
-      if (!CheckScoreCascade(side, newTier, newEntry)) {
-        CheckWinCondition();
-        UpdateHajimeBtn();
-        if (!MatchFinished && WinnerSide) { UpdateLamps(WinnerSide, false); WinnerSide = null; }
-      }
+    Logs[side] = Logs[side].filter(e => e.id !== entry.id);
+  }
+  if (newTier === null) {
+    const newEntry = { id: LogIdCounter++, text, sec: newSec, osaeSeq: OsaeSeq++ };
+    OsaeHistory[side].unshift(newEntry);
+    RenderLog(side);
+  } else {
+    Sc[side][newTier] = (Sc[side][newTier] || 0) + 1;
+    UpdateScores();
+    const newId = AddLog(side, text, newTier);
+    const newEntry = Logs[side].find(e => e.id === newId);
+    newEntry.sec = newSec;
+    newEntry.osaeSeq = OsaeSeq++;
+    if (!CheckScoreCascade(side, newTier, newEntry)) {
+      CheckWinCondition();
+      UpdateHajimeBtn();
+      if (!MatchFinished && WinnerSide) { UpdateLamps(WinnerSide, false); WinnerSide = null; }
     }
   }
   RenderRecordEditList();
-  RenderOsaeSecEditor();
+  CloseRecordEditModal();
 }
 
 function RecordEditBackToList() {
