@@ -2977,9 +2977,7 @@ function CommitRecordSec() {
     const newEntry = Logs[side].find(e => e.id === newId);
     newEntry.sec = newSec;
     newEntry.osaeSeq = OsaeSeq++;
-    // 一本からの格下げでは、技あり２つ→合わせ一本のような昇格カスケードを
-    // 再度呼び出さない（ApplyRecordEditと同様。一本が復活してしまうため）
-    if (oldTier === 'I' || !CheckScoreCascade(side, newTier, newEntry)) {
+    if (!CheckScoreCascade(side, newTier, newEntry)) {
       CheckWinCondition();
       UpdateHajimeBtn();
       if (!MatchFinished && WinnerSide) { UpdateLamps(WinnerSide, false); WinnerSide = null; }
@@ -3016,10 +3014,7 @@ function ApplyRecordEdit(newKey) {
   RenderLog(side);
   CloseRecordEditModal();
 
-  // 一本から他の判定への変更（格下げ）は、その一本を取り消す操作なので、
-  // 技あり２つ→合わせ一本のような昇格カスケードを再度呼び出さない
-  // （呼ぶと一本が別記録として復活し、一本を消したはずが残ってしまう）
-  if (oldKey === 'I' || !CheckScoreCascade(side, newKey, entry)) {
+  if (!CheckScoreCascade(side, newKey, entry)) {
     CheckWinCondition();
     UpdateHajimeBtn();
     if (!MatchFinished && WinnerSide) { UpdateLamps(WinnerSide, false); WinnerSide = null; }
